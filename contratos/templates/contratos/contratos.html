@@ -172,51 +172,80 @@
             }
         });
 
-        // Buscar contratos via gateway
-        // Buscar contratos via gateway
-        document.getElementById('search-btn').addEventListener('click', function () {
-            const query = document.getElementById('search-input').value;
-            // URL correta do gateway
-            const url = `/gateway/compras/contratos/?q=${encodeURIComponent(query)}`;
+        // Busca Grupos de Materiais via gateway
+    document.getElementById('search-btn').addEventListener('click', function () {
+        // 1. Extrair o valor do campo de busca para 'codigoGrupo'
+        const codigoGrupo = document.getElementById('search-input').value;
 
-            fetch(url)
-                .then(res => res.json())
-                .then(data => {
-                    const resultsDiv = document.getElementById('results');
-                    resultsDiv.innerHTML = '';
+        // 2. Definir os valores fixos (ou de outros campos se existirem)
+        const pagina = 1; // Fixamos na primeira página
+        const statusGrupo = 'true'; // Fixamos em status ativo
 
-                    if (!data || (Array.isArray(data) && data.length === 0)) {
-                        resultsDiv.innerHTML = '<p class="text-center text-muted">Nenhum contrato encontrado.</p>';
-                        return;
-                    }
+        // 3. Construir a URL com os 3 parâmetros
+        const url = `/gateway/material/grupo_material/` +
+            `?codigoGrupo=${encodeURIComponent(codigoGrupo)}` +
+            `&pagina=${pagina}` +
+            `&statusGrupo=${statusGrupo}`;
+        
+        // Mudar o texto do hero para refletir a busca
+        document.querySelector('.hero-section h1').textContent = 'Grupos de Materiais';
+        document.querySelector('.hero-section p.lead').textContent = 'Consulta: 1_consultarGrupoMaterial';
 
-                    // Exibir os resultados
-                    (Array.isArray(data) ? data : [data]).forEach(contract => {
-                        const card = document.createElement('div');
-                        card.className = 'col-md-4';
-                        card.innerHTML = `
-                    <div class="card p-3 h-100">
-                        <h5 class="card-title">${contract.objeto || 'Sem título'}</h5>
-                        <p class="card-text">
-                            <strong>Órgão:</strong> ${contract.orgao || '-'}<br>
-                            <strong>UASG:</strong> ${contract.uasg || '-'}<br>
-                            <strong>Fornecedor:</strong> ${contract.fornecedor || '-'}<br>
-                            <strong>Valor:</strong> ${contract.valor_global || '-'}
-                        </p>
-                        <a href="${contract.link || '#'}" target="_blank" class="btn btn-outline-primary btn-sm">
-                            Ver Detalhes
-                        </a>
-                    </div>
-                `;
-                        resultsDiv.appendChild(card);
-                    });
-                })
-                .catch(err => {
-                    console.error('Erro ao chamar gateway:', err);
-                    document.getElementById('results').innerHTML =
-                        '<p class="text-danger text-center mt-3">Erro ao acessar o gateway. Tente novamente mais tarde.</p>';
+
+        fetch(url)
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`Erro HTTP! Status: ${res.status}`);
+                }
+                return res.json();
+            })
+            .then(data => {
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = '';
+
+                // 🔑 Extrair os dados do array 'resultado'
+                const materialList = data.resultado || []; 
+
+                if (materialList.length === 0) {
+                    resultsDiv.innerHTML = '<p class="text-center text-muted">Nenhum grupo de material encontrado.</p>';
+                    return;
+                }
+
+                // 🔑 Iterar e exibir os campos específicos da API de Grupos
+                materialList.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'col-md-6 mb-4'; // Usando col-md-6 para cards maiores
+                    
+                    const status = item.statusGrupo ? 'Ativo' : 'Inativo';
+                    const statusClass = item.statusGrupo ? 'success' : 'danger';
+                    
+                    card.innerHTML = `
+                        <div class="card p-4 h-100 shadow-sm">
+                            <h5 class="card-title text-primary">
+                                <i class="bi bi-tag-fill me-2"></i> ${item.nomeGrupo}
+                            </h5>
+                            <p class="card-text">
+                                <strong>Código:</strong> ${item.codigoGrupo}<br>
+                                <strong>Última Atualização:</strong> ${new Date(item.dataHoraAtualizacao).toLocaleDateString('pt-BR')}<br>
+                                <span class="badge bg-${statusClass} mt-2">${status}</span>
+                            </p>
+                        </div>
+                    `;
+                    resultsDiv.appendChild(card);
                 });
-        });
+
+                // Opcional: Mostrar total de registros
+                if (data.totalRegistros > 0) {
+                     resultsDiv.insertAdjacentHTML('beforebegin', 
+                        `<p class="text-end text-muted mt-3">Total de Registros: <strong>${data.totalRegistros}</strong></p>`);
+                }
+            })
+            .catch(err => {
+                console.error('Erro ao chamar gateway:', err);
+                document.getElementById('results').innerHTML =
+                    `<p class="text-danger text-center mt-3">Erro ao acessar a API: ${err.message}.</p>`;
+            });
+    });
 
     </script>
 </body>

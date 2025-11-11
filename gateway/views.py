@@ -1,33 +1,32 @@
-from django.http import JsonResponse, HttpResponse
-from django.core.cache import cache
-import hashlib
-import json
-from .services import compras_api  # importa serviços específicos
+# views.py / router.py (SIMPLIFICADO)
 
-CACHE_TIMEOUT = 300  # 5 minutos
+from django.http import JsonResponse
+import json
+# Importe apenas os módulos de API necessários
+from .services import material_api 
+
+# Removido: cache, hashlib, CACHE_TIMEOUT
 
 def gateway_router(request, service_name, endpoint_key):
-    # Criar chave de cache
-    key_source = f"{request.method}:{service_name}:{endpoint_key}:{json.dumps(request.GET, sort_keys=True)}"
-    cache_key = "gateway_cache_" + hashlib.md5(key_source.encode()).hexdigest()
-
-    cached_response = cache.get(cache_key)
-    if cached_response:
-        return HttpResponse(
-            cached_response['content'],
-            status=cached_response['status'],
-            content_type=cached_response['content_type']
-        )
-
-    # Delegar para service
-    if service_name == 'compras' and endpoint_key == 'orgaos':
-        resp = compras_api.get_orgaos(params=request.GET)
+    
+    # 1. Delegar para service
+    resp = None
+    
+    if service_name == 'material' and endpoint_key == 'grupo_material':
+        resp = material_api.consultar_grupo_material(params=request.GET)
+        
     else:
-        return JsonResponse({'error': 'Serviço ou endpoint não encontrado'}, status=404)
+        # Se o serviço ou endpoint não for encontrado
+        return JsonResponse({'error': f'Serviço "{service_name}" ou endpoint "{endpoint_key}" não encontrado'}, status=404)
 
-    # Salvar no cache
+    # 2. Tratar Resposta
     if 'content' in resp:
-        cache.set(cache_key, resp, CACHE_TIMEOUT)
-        return HttpResponse(resp['content'], status=resp['status'], content_type=resp['content_type'])
+        # Se a resposta for bem-sucedida, retorna o JSON (JsonResponse cuida da serialização e do Content-Type)
+        return JsonResponse(resp['content'], status=resp['status'])
+    
     else:
+        # Se houver um erro no serviço (como 503 da API externa)
+        # Retorna o erro com o status code apropriado
         return JsonResponse({'error': resp.get('error', 'Erro desconhecido')}, status=resp.get('status', 500))
+
+# Removido: toda a lógica de cache e HttpResponse
