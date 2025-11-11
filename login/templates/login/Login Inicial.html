@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <style>
+        /* Estilo para garantir que o body ocupe a altura total da viewport */
+        html, body {
+            height: 100%;
+        }
+        /* Opcional: Adiciona um background mais agradável para a tela de login */
+        body {
+            background-color: gray; /* Cor cinza claro do Bootstrap */
+        }
+    </style>
+</head>
+<body class="d-flex flex-column">
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Sistemas Satélites</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="{% url 'home:home'%}">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-auto">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-lg">
+                    <div class="card-body p-4">
+                        <h3 class="card-title text-center mb-4">Login</h3>
+                        {% if form.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            Usuário ou senha inválidos. Por favor, tente novamente.
+                        </div>
+                        {% endif %}
+                        <form action="{% url 'login:login' %}" method="post">
+                            {% csrf_token %}
+
+                            <div class="mb-3">
+                                <label for="UserName" class="form-label">Usuário</label>
+                                <input type="text" class="form-control" id="UserName" name="username" placeholder="Digite seu usuário, e-mail ou CPF" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="Password" class="form-label">Senha</label>
+                                <input type="password" class="form-control" id="Password" name="password" placeholder="Digite sua senha" required>
+                            </div>
+                            
+                            {% if next %}
+                            <input type="hidden" name="next" value="{{ next }}" />
+                            {% endif %}
+
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary">Enviar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-rK6g4O5l1+j6b/5l+e+p+d+l+t+s+g+h+j+k+m+n+o+p+q+r+s+t+u+v+w+x+y+z+A+B+C+D+E+F+G+H+I+J+K+L+M+N+O+P+Q+R+S+T+U+V+W+X+Y+Z" crossorigin="anonymous"></script>
+</body>
+</html>
