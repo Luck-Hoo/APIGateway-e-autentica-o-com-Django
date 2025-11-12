@@ -1,23 +1,37 @@
-# views.py / router.py (SIMPLIFICADO)
-
 from django.http import JsonResponse
 import json
-# Importe apenas os módulos de API necessários
-from .services import material_api 
+from .services import chamar_endpoint 
+import os
 
-# Removido: cache, hashlib, CACHE_TIMEOUT
+# 🔑 Carrega os endpoints das variáveis de ambiente
+MATERIAL_ENDPOINTS = {
+    # Catálogo Material
+    'grupo_material': os.environ.get('MATERIAL_GRUPO_ENDPOINT'), 
+    'classe_material': os.environ.get('MATERIAL_CLASSE_ENDPOINT'), 
+    'pdm_material': os.environ.get('MATERIAL_PDM_ENDPOINT'), 
+    'item_material': os.environ.get('MATERIAL_ITEM_ENDPOINT'), 
+    'natureza_despesa': os.environ.get('MATERIAL_NATUREZA_DESPESA_ENDPOINT'), 
+    'unidade_fornecimento': os.environ.get('MATERIAL_UNIDADE_FORNECIMENTO_ENDPOINT'), 
+    'caracteristicas': os.environ.get('MATERIAL_CARACTERISTICAS_ENDPOINT'),
+}
+
 
 def gateway_router(request, service_name, endpoint_key):
     
-    # 1. Delegar para service
+    # Delegar para service
     resp = None
     
-    if service_name == 'material' and endpoint_key == 'grupo_material':
-        resp = material_api.consultar_grupo_material(params=request.GET)
+    # Para os endpoints do material
+    if service_name == 'material':
+        endpoint_path = MATERIAL_ENDPOINTS.get(endpoint_key)
         
-    else:
-        # Se o serviço ou endpoint não for encontrado
-        return JsonResponse({'error': f'Serviço "{service_name}" ou endpoint "{endpoint_key}" não encontrado'}, status=404)
+        if endpoint_path:
+            # Chama a função genérica passando o caminho específico
+            resp = chamar_endpoint.chamar_enpoint_dados_abertos_gov(endpoint_path, params=request.GET)
+        else:
+            return JsonResponse({
+                'error': f'Endpoint "{endpoint_key}" não encontrado para o serviço "material".'
+            }, status=404)
 
     # 2. Tratar Resposta
     if 'content' in resp:
@@ -28,5 +42,3 @@ def gateway_router(request, service_name, endpoint_key):
         # Se houver um erro no serviço (como 503 da API externa)
         # Retorna o erro com o status code apropriado
         return JsonResponse({'error': resp.get('error', 'Erro desconhecido')}, status=resp.get('status', 500))
-
-# Removido: toda a lógica de cache e HttpResponse

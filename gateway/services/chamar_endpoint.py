@@ -1,13 +1,17 @@
 # material_api.py (A estrutura de retorno é mantida)
 import requests
-import json 
+import json
+import os
+from urllib.parse import urljoin
 
-API_BASE_URL = "https://dadosabertos.compras.gov.br"
+API_BASE_URL = os.environ.get(
+    'COMPRAS_BASE_URL'
+)
 
-def consultar_grupo_material(params=None):
-    url = f"{API_BASE_URL}/modulo-material/1_consultarGrupoMaterial"
+def chamar_enpoint_dados_abertos_gov(endpoint_path, params=None):
+    url = urljoin(API_BASE_URL, endpoint_path)    
     try:
-        resp = requests.get(url, params=params, timeout=30)
+        resp = requests.get(url, params=params, timeout=60)
         resp.raise_for_status()
         
         # 🔑 Adicionar tratamento de JSONDecodeError para evitar erros 500

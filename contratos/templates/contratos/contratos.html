@@ -39,11 +39,23 @@
             --text-muted-color: #b0b0b0;
         }
 
-        body {
+        /* Estilo para garantir que os inputs/selects sejam visíveis no modo escuro */
+        body.dark-mode .form-control,
+        body.dark-mode .form-select {
+            background-color: #2b2b2b;
+            color: #e0e0e0;
+            border-color: #444;
+        }
+
+        body.dark-mode .body {
             background-color: var(--body-bg);
             color: var(--body-color);
             font-family: 'Segoe UI', sans-serif;
             transition: background-color 0.3s, color 0.3s;
+        }
+
+        .main-content {
+            padding-top: 80px;
         }
 
         .navbar {
@@ -99,11 +111,24 @@
             font-size: 0.9rem;
             color: var(--text-muted-color);
         }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+        }
     </style>
 </head>
 
 <body>
-    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light fixed-top">
         <div class="container">
             <a class="navbar-brand fw-bold text-primary" href="{% url 'home:home' %}">
@@ -125,44 +150,102 @@
         </div>
     </nav>
 
-    <!-- Conteúdo principal -->
     <div class="container py-5" style="margin-top: 90px;">
-        <!-- Hero -->
+
         <div class="hero-section shadow-sm">
+
             <h1 class="display-5 fw-bold">Contratos Governamentais</h1>
+
             <p class="lead mt-3">Pesquise contratos firmados via Compras.gov.br de forma rápida e organizada.</p>
+
         </div>
 
-        <!-- Caixa de busca -->
-        <div class="row justify-content-center mb-4">
-            <div class="col-md-6 col-sm-8">
-                <div class="input-group">
-                    <input type="text" id="search-input" class="form-control" placeholder="Buscar contrato...">
-                    <button id="search-btn" class="btn btn-primary">Pesquisar</button>
-                </div>
+
+        <div class="row justify-content-center mb-4 g-3">
+            <div class="col-md-3">
+                <label for="nomeGrupo-select" class="form-label text-muted">Nome do Grupo</label>
+                <select id="nomeGrupo-select" class="form-select">
+                    <option value="" selected>Carregando Nomes...</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="classe-select" class="form-label text-muted">Classe</label>
+                <select id="classe-select" class="form-select">
+                    <option value="" selected>Carregando Classes...</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="natureza-select" class="form-label text-muted">Natureza Despesa</label>
+                <select id="natureza-select" class="form-select">
+                    <option value="" selected>Carregando Naturezas...</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button id="search-btn" class="btn btn-primary w-100">Pesquisar Tudo</button>
             </div>
         </div>
-        <div class="container py-5" style="margin-top: 40px;">
-            <div id="total-registros-container" class="mb-3"></div>
 
-            <div id="results" class="row"></div>
+        <div id="status-message" class="text-center my-3 text-muted"></div>
+
+        <div id="material-data-table" style="display:none;">
+            <h3 class="mb-3 text-primary">Detalhes Consolidados do Material</h3>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Nome/Grupo</th>
+                            <th>Classe</th>
+                            <th>PDM</th>
+                            <th>Descrição Item</th>
+                            <th>Natureza Despesa</th>
+                            <th>Unidade Fornec.</th>
+                            <th>Características</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <!-- Resultados -->
-        <div id="results" class="row"></div>
+    </div>
     </div>
 
-    <!-- Rodapé -->
     <footer>
         <div class="container">
             <p>&copy; {{ now|date:"Y" }} Gateway de Dados Abertos — Desenvolvido com Django</p>
         </div>
     </footer>
 
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Alternar modo escuro
+        // Spinner
+        const spinnerStyle = document.createElement('style');
+        spinnerStyle.innerHTML = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }';
+        document.head.appendChild(spinnerStyle);
+
+        // Variáveis DOM
+        const statusMessageDiv = document.getElementById('status-message');
+        const tableDiv = document.getElementById('material-data-table');
+        const tableBody = document.getElementById('table-body');
+        const nomeGrupoSelect = document.getElementById('nomeGrupo-select');
+        const classeSelect = document.getElementById('classe-select');
+        const naturezaSelect = document.getElementById('natureza-select');
+
+        // Endpoints
+        const ENDPOINT_KEYS_FOR_SEARCH = [
+            'grupo_material',
+            'classe_material',
+            'pdm_material',
+            'item_material',
+            'natureza_despesa',
+            'unidade_fornecimento',
+            'caracteristicas'
+        ];
+
+        // --- FUNÇÕES DE API E AUXILIARES ---
+
+        // Modo escuro
         const toggleButton = document.getElementById('darkModeToggle');
         toggleButton.addEventListener('click', () => {
             document.body.classList.toggle('dark-mode');
@@ -176,81 +259,169 @@
             }
         });
 
-        // Busca Grupos de Materiais via gateway
-        document.getElementById('search-btn').addEventListener('click', function () {
-            const totalContainer = document.getElementById('total-registros-container');
-            totalContainer.innerHTML = '';
-            // 1. Extrair o valor do campo de busca para 'codigoGrupo'
-            const codigoGrupo = document.getElementById('search-input').value;
+        // Chamada de API
+        async function fetchEndpoint(endpointKey, params) {
+            const query = new URLSearchParams(params).toString();
+            const url = `/gateway/material/${endpointKey}/?${query}`;
 
-            // 2. Definir os valores fixos (ou de outros campos se existirem)
-            const pagina = 1; // Fixamos na primeira página
-            const statusGrupo = 'true'; // Fixamos em status ativo
+            const res = await fetch(url);
 
-            // 3. Construir a URL com os 3 parâmetros
-            const url = `/gateway/material/grupo_material/` +
-                `?codigoGrupo=${encodeURIComponent(codigoGrupo)}` +
-                `&pagina=${pagina}` +
-                `&statusGrupo=${statusGrupo}`;
+            if (!res.ok) {
+                try {
+                    const errorData = await res.json();
+                    const errorMessage = errorData.error || `Erro HTTP ${res.status}`;
+                    return { [endpointKey]: { error: errorMessage } };
+                } catch {
+                    return { [endpointKey]: { error: `Falha ao conectar/HTTP ${res.status}` } };
+                }
+            }
 
-            // Mudar o texto do hero para refletir a busca
-            document.querySelector('.hero-section h1').textContent = 'Grupos de Materiais';
-            document.querySelector('.hero-section p.lead').textContent = 'Consulta: 1_consultarGrupoMaterial';
+            const data = await res.json();
+            // Retorna o resultado relevante (primeiro item do 'resultado' ou o objeto data)
+            return { [endpointKey]: data.resultado && data.resultado.length > 0 ? data.resultado[0] : data };
+        }
 
+        // Preencher um dropdown
+        async function populateSelect(selectElement, endpointKey, codeKey, nameKey, defaultText) {
+            selectElement.innerHTML = `<option value="" selected>${defaultText}</option>`;
+            try {
+                // Chamada com parâmetros mínimos para obter a lista completa
+                const params = { pagina: 1, statusGrupo: true };
+                const url = `/gateway/material/${endpointKey}?${new URLSearchParams(params).toString()}`;
 
-            fetch(url)
-                .then(res => {
-                    if (!res.ok) {
-                        throw new Error(`Erro HTTP! Status: ${res.status}`);
-                    }
-                    return res.json();
-                })
-                .then(data => {
-                    const resultsDiv = document.getElementById('results');
-                    resultsDiv.innerHTML = '';
+                const res = await fetch(url);
+                const data = await res.json();
 
-                    // 🔑 Extrair os dados do array 'resultado'
-                    const materialList = data.resultado || [];
+                const list = data.resultado || data.content.resultado || []; // Pega a lista do resultado
 
-                    if (materialList.length === 0) {
-                        resultsDiv.innerHTML = '<p class="text-center text-muted">Nenhum grupo de material encontrado.</p>';
-                        return;
-                    }
-
-                    // 🔑 Iterar e exibir os campos específicos da API de Grupos
-                    materialList.forEach(item => {
-                        const card = document.createElement('div');
-                        card.className = 'col-md-6 mb-4'; // Usando col-md-6 para cards maiores
-
-                        const status = item.statusGrupo ? 'Ativo' : 'Inativo';
-                        const statusClass = item.statusGrupo ? 'success' : 'danger';
-
-                        card.innerHTML = `
-                        <div class="card p-4 h-100 shadow-sm">
-                            <h5 class="card-title text-primary">
-                                <i class="bi bi-tag-fill me-2"></i> ${item.nomeGrupo}
-                            </h5>
-                            <p class="card-text">
-                                <strong>Código:</strong> ${item.codigoGrupo}<br>
-                                <strong>Última Atualização:</strong> ${new Date(item.dataHoraAtualizacao).toLocaleDateString('pt-BR')}<br>
-                                <span class="badge bg-${statusClass} mt-2">${status}</span>
-                            </p>
-                        </div>
-                    `;
-                        resultsDiv.appendChild(card);
-                    });
-
-                    if (data.totalRegistros > 0) {
-                        totalContainer.innerHTML =
-                            `<p class="text-end text-muted">Total de Registros: <strong>${data.totalRegistros}</strong></p>`;
-                    }
-                })
-                .catch(err => {
-                    console.error('Erro ao chamar gateway:', err);
-                    document.getElementById('results').innerHTML =
-                        `<p class="text-danger text-center mt-3">Erro ao acessar a API: ${err.message}.</p>`;
+                list.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item[codeKey];
+                    option.textContent = `${item[codeKey]} - ${item[nameKey]}` || item[codeKey];
+                    selectElement.appendChild(option);
                 });
+
+                selectElement.disabled = false;
+
+            } catch (err) {
+                console.error(`Erro ao carregar ${endpointKey}:`, err);
+                selectElement.innerHTML = `<option value="">Falha ao carregar</option>`;
+                selectElement.disabled = true;
+            }
+        }
+
+        // Carregamento inicial de Dropdowns
+        async function loadDropdowns() {
+            await populateSelect(
+                nomeGrupoSelect,
+                'grupo_material',
+                'codigoGrupo',
+                'nomeGrupo',
+                'Carregando Grupos...'
+            );
+            // 1. Carregar Classes
+            await populateSelect(classeSelect, 'classe_material', 'codigoClasse', 'nomeClasse', 'Carregando Classes...');
+
+            // 2. Carregar Natureza Despesa
+            await populateSelect(naturezaSelect, 'natureza_despesa', 'codigoNaturezaDespesa', 'descricaoNaturezaDespesa', 'Carregando Naturezas...');
+        }
+
+        // --- LÓGICA DE PESQUISA ---
+
+        document.getElementById('search-btn').addEventListener('click', async function () {
+            // Coletar filtros
+            const codigoGrupo = nomeGrupoSelect.value;
+            const codigoClasse = classeSelect.value;
+            const codigoNatureza = naturezaSelect.value;
+
+            // Validação básica
+            if (!codigoGrupo) {
+                statusMessageDiv.innerHTML = '<p class="text-danger">O Grupo é obrigatório para a pesquisa.</p>';
+                tableDiv.style.display = 'none';
+                return;
+            }
+
+            // Feedback visual
+            statusMessageDiv.innerHTML = '<p class="text-info"><i class="bi bi-arrow-clockwise spin"></i> Carregando todos os detalhes...</p>';
+            tableBody.innerHTML = '';
+            tableDiv.style.display = 'none';
+
+            try {
+                // Parâmetros base para as chamadas em paralelo
+                const baseParams = {
+                    codigoGrupo: codigoGrupo,
+                    pagina: 1,
+                    statusGrupo: true
+                };
+
+                // Adicionar filtros selecionados (serão enviados em todas as chamadas)
+                if (codigoGrupo) baseParams.codigoGrupo = codigoGrupo;
+                if (codigoClasse) baseParams.codigoClasse = codigoClasse;
+                if (codigoNatureza) baseParams.codigoNaturezaDespesa = codigoNatureza;
+
+
+                // Dispara todas as chamadas de API em paralelo
+                const fetchPromises = ENDPOINT_KEYS_FOR_SEARCH.map(key => fetchEndpoint(key, baseParams));
+
+                const resultsArray = await Promise.all(fetchPromises);
+
+                // Consolida os resultados em um único objeto
+                const consolidatedData = resultsArray.reduce((acc, current) => ({ ...acc, ...current }), {});
+
+                renderTable(consolidatedData);
+
+            } catch (err) {
+                statusMessageDiv.innerHTML = `<p class="text-danger">Falha crítica ao buscar dados: ${err.message}</p>`;
+                console.error(err);
+            }
         });
+
+        // --- FUNÇÃO DE RENDERIZAÇÃO DA TABELA ---
+
+        function renderTable(data) {
+            const errors = Object.entries(data).filter(([key, value]) => value && value.error);
+
+            if (errors.length > 0) {
+                // Se houver erros, mostra a lista de erros
+                const errorMessage = errors
+                    .map(([key, value]) => `**[${key.toUpperCase()}]:** ${value.error}`)
+                    .join('<br>');
+
+                statusMessageDiv.innerHTML = `<p class="text-danger">Erros encontrados:<br>${errorMessage}</p>`;
+                tableDiv.style.display = 'none';
+                return;
+            }
+
+            statusMessageDiv.innerHTML = '<p class="text-success">Dados consolidados com sucesso!</p>';
+
+            // Mapeamento dos campos API
+            const rowData = {
+                nomeGrupo: data.grupo_material?.nomeGrupo || '-',
+                classe: data.classe_material?.nomeClasse || '-',
+                pdm: data.pdm_material?.nomePdm || '-',
+                descricaoItem: data.item_material?.descricaoItem || '-',
+                naturezaDespesa: data.natureza_despesa?.descricaoNaturezaDespesa || '-',
+                unidadeFornecimento: data.unidade_fornecimento?.descricaoUnidadeFornecimento || '-',
+                caracteristicas: (data.caracteristicas?.caracteristicas || []).map(c => c.nome || '').join('; ') || '-',
+            };
+
+            // Linha da tabela
+            const newRow = tableBody.insertRow();
+            newRow.innerHTML = `
+            <td>${rowData.nomeGrupo}</td>
+            <td>${rowData.classe}</td>
+            <td>${rowData.pdm}</td>
+            <td>${rowData.descricaoItem}</td>
+            <td>${rowData.naturezaDespesa}</td>
+            <td>${rowData.unidadeFornecimento}</td>
+            <td>${rowData.caracteristicas}</td>
+        `;
+
+            tableDiv.style.display = 'block';
+        }
+
+        // Carregamento inicial dos dropdowns
+        window.addEventListener('load', loadDropdowns);
 
     </script>
 </body>
