@@ -9,10 +9,7 @@ MATERIAL_ENDPOINTS = {
     'grupo_material': os.environ.get('MATERIAL_GRUPO_ENDPOINT'), 
     'classe_material': os.environ.get('MATERIAL_CLASSE_ENDPOINT'), 
     'pdm_material': os.environ.get('MATERIAL_PDM_ENDPOINT'), 
-    'item_material': os.environ.get('MATERIAL_ITEM_ENDPOINT'), 
-    'natureza_despesa': os.environ.get('MATERIAL_NATUREZA_DESPESA_ENDPOINT'), 
-    'unidade_fornecimento': os.environ.get('MATERIAL_UNIDADE_FORNECIMENTO_ENDPOINT'), 
-    'caracteristicas': os.environ.get('MATERIAL_CARACTERISTICAS_ENDPOINT'),
+    'item_material': os.environ.get('MATERIAL_ITEM_ENDPOINT')
 }
 
 

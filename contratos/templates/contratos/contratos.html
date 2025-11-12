@@ -2,428 +2,465 @@
 
 <!DOCTYPE html>
 <html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Consulta Material - Gateway API</title>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Contratos - Gateway API</title>
-
-    <link rel="icon" href="{% static 'home/img/GovDigital.ico' %}" type="image/x-icon">
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link
+      rel="icon"
+      href="{% static 'home/img/GovDigital.ico' %}"
+      type="image/x-icon"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
 
     <style>
-        :root {
-            --body-bg: #f4f6f9;
-            --body-color: #212529;
-            --navbar-bg: #ffffff;
-            --card-bg: #ffffff;
-            --card-color: #212529;
-            --footer-bg: #ffffff;
-            --footer-color: #6c757d;
-            --hero-bg-gradient: linear-gradient(135deg, #0d6efd, #0a58ca);
-            --text-muted-color: #6c757d;
+      :root {
+        --body-bg: #f4f6f9;
+        --body-color: #212529;
+        --navbar-bg: #ffffff;
+        --card-bg: #ffffff;
+        --card-color: #212529;
+        --footer-bg: #ffffff;
+        --footer-color: #6c757d;
+        --hero-bg-gradient: linear-gradient(135deg, #0d6efd, #0a58ca);
+        --text-muted-color: #6c757d;
+      }
+
+      body.dark-mode {
+        --body-bg: #121212;
+        --body-color: #e0e0e0;
+        --navbar-bg: #1f1f1f;
+        --card-bg: #1e1e1e;
+        --card-color: #e0e0e0;
+        --footer-bg: #1f1f1f;
+        --footer-color: #ccc;
+        --hero-bg-gradient: linear-gradient(135deg, #343a40, #212529);
+        --text-muted-color: #b0b0b0;
+      }
+
+      body {
+        background-color: var(--body-bg);
+        color: var(--body-color);
+        font-family: "Segoe UI", sans-serif;
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      body.dark-mode {
+        background-color: var(--body-bg);
+        color: var(--body-color);
+      }
+
+      body.dark-mode .form-control,
+      body.dark-mode .form-select {
+        background-color: #2b2b2b;
+        color: #e0e0e0;
+        border-color: #444;
+      }
+
+      .navbar {
+        background-color: var(--navbar-bg);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+        transition: background-color 0.3s;
+      }
+
+      .hero-section {
+        background: var(--hero-bg-gradient);
+        color: white;
+        padding: 70px 20px;
+        border-radius: 12px;
+        text-align: center;
+        margin-top: 30px;
+        margin-bottom: 50px;
+        transition: background 0.3s;
+      }
+
+      .card {
+        transition: all 0.25s ease-in-out, background-color 0.3s, color 0.3s;
+        border: none;
+        border-radius: 12px;
+        background-color: var(--card-bg);
+        color: var(--card-color);
+      }
+
+      footer {
+        margin-top: 60px;
+        padding: 20px 0;
+        background-color: var(--footer-bg);
+        border-top: 1px solid #e5e5e5;
+        text-align: center;
+        color: var(--footer-color);
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
 
-        body.dark-mode {
-            --body-bg: #121212;
-            --body-color: #e0e0e0;
-            --navbar-bg: #1f1f1f;
-            --card-bg: #1e1e1e;
-            --card-color: #e0e0e0;
-            --footer-bg: #1f1f1f;
-            --footer-color: #ccc;
-            --hero-bg-gradient: linear-gradient(135deg, #343a40, #212529);
-            --text-muted-color: #b0b0b0;
+        100% {
+          transform: rotate(360deg);
         }
+      }
 
-        /* Estilo para garantir que os inputs/selects sejam visíveis no modo escuro */
-        body.dark-mode .form-control,
-        body.dark-mode .form-select {
-            background-color: #2b2b2b;
-            color: #e0e0e0;
-            border-color: #444;
-        }
-
-        body.dark-mode .body {
-            background-color: var(--body-bg);
-            color: var(--body-color);
-            font-family: 'Segoe UI', sans-serif;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        .main-content {
-            padding-top: 80px;
-        }
-
-        .navbar {
-            background-color: var(--navbar-bg);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-            transition: background-color 0.3s;
-        }
-
-        .hero-section {
-            background: var(--hero-bg-gradient);
-            color: white;
-            padding: 70px 20px;
-            border-radius: 12px;
-            text-align: center;
-            margin-top: 30px;
-            margin-bottom: 50px;
-            transition: background 0.3s;
-        }
-
-        .card {
-            transition: all 0.25s ease-in-out, background-color 0.3s, color 0.3s;
-            border: none;
-            border-radius: 12px;
-            background-color: var(--card-bg);
-            color: var(--card-color);
-        }
-
-        .card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-        }
-
-        footer {
-            margin-top: 60px;
-            padding: 20px 0;
-            background-color: var(--footer-bg);
-            border-top: 1px solid #e5e5e5;
-            text-align: center;
-            color: var(--footer-color);
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        #results .card {
-            margin-bottom: 20px;
-        }
-
-        #results .card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        #results .card-text {
-            font-size: 0.9rem;
-            color: var(--text-muted-color);
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .spin {
-            animation: spin 1s linear infinite;
-        }
+      .spin {
+        animation: spin 1s linear infinite;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <nav class="navbar navbar-expand-lg navbar-light fixed-top">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-primary" href="{% url 'home:home' %}">
-                <i class="bi bi-diagram-3"></i> Gateway API
-            </a>
+      <div class="container">
+        <a
+          class="navbar-brand fw-bold text-primary"
+          href="{% url 'home:home' %}"
+        >
+          <i class="bi bi-diagram-3"></i> Gateway API
+        </a>
 
-            <div class="d-flex align-items-center">
-                <button id="darkModeToggle" class="btn btn-outline-secondary btn-sm me-3">
-                    <i class="bi bi-moon-stars"></i> Escuro
-                </button>
+        <div class="d-flex align-items-center">
+          <button
+            id="darkModeToggle"
+            class="btn btn-outline-secondary btn-sm me-3"
+          >
+            <i class="bi bi-moon-stars"></i> Escuro
+          </button>
 
-                {% if user.is_authenticated %}
-                <span class="me-3 mt-2 text-muted">Olá, {{ user.username }}</span>
-                <a href="{% url 'logout:logout' %}" class="btn btn-outline-danger btn-sm">Sair</a>
-                {% else %}
-                <a href="{% url 'login:login' %}" class="btn btn-primary btn-sm">Login</a>
-                {% endif %}
-            </div>
+          {% if user.is_authenticated %}
+          <span class="me-3 mt-2 text-muted">Olá, {{ user.username }}</span>
+          <a
+            href="{% url 'logout:logout' %}"
+            class="btn btn-outline-danger btn-sm"
+            >Sair</a
+          >
+          {% else %}
+          <a href="{% url 'login:login' %}" class="btn btn-primary btn-sm"
+            >Login</a
+          >
+          {% endif %}
         </div>
+      </div>
     </nav>
 
-    <div class="container py-5" style="margin-top: 90px;">
+    <div class="container py-5" style="margin-top: 90px">
+      <div class="hero-section shadow-sm">
+        <h1 class="display-5 fw-bold">Consulta de Material (Grupo e Classe)</h1>
+        <p class="lead mt-3">
+          Pesquise por Grupo de Material e filtre por Classe.
+        </p>
+      </div>
 
-        <div class="hero-section shadow-sm">
-
-            <h1 class="display-5 fw-bold">Contratos Governamentais</h1>
-
-            <p class="lead mt-3">Pesquise contratos firmados via Compras.gov.br de forma rápida e organizada.</p>
-
+      <div class="row justify-content-center mb-4 g-3">
+        <div class="col-md-5">
+          <label for="nomeGrupo-select" class="form-label text-muted"
+            >Nome do Grupo</label
+          >
+          <select id="nomeGrupo-select" class="form-select">
+            <option value="" selected>Carregando Grupos...</option>
+          </select>
         </div>
-
-
-        <div class="row justify-content-center mb-4 g-3">
-            <div class="col-md-3">
-                <label for="nomeGrupo-select" class="form-label text-muted">Nome do Grupo</label>
-                <select id="nomeGrupo-select" class="form-select">
-                    <option value="" selected>Carregando Nomes...</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="classe-select" class="form-label text-muted">Classe</label>
-                <select id="classe-select" class="form-select">
-                    <option value="" selected>Carregando Classes...</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="natureza-select" class="form-label text-muted">Natureza Despesa</label>
-                <select id="natureza-select" class="form-select">
-                    <option value="" selected>Carregando Naturezas...</option>
-                </select>
-            </div>
-            <div class="col-md-3 d-flex align-items-end">
-                <button id="search-btn" class="btn btn-primary w-100">Pesquisar Tudo</button>
-            </div>
+        <div class="col-md-5">
+          <label for="classe-select" class="form-label text-muted"
+            >Classe (Opcional)</label
+          >
+          <select id="classe-select" class="form-select" disabled>
+            <option value="" selected>Selecione um Grupo primeiro</option>
+          </select>
         </div>
-
-        <div id="status-message" class="text-center my-3 text-muted"></div>
-
-        <div id="material-data-table" style="display:none;">
-            <h3 class="mb-3 text-primary">Detalhes Consolidados do Material</h3>
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover">
-                    <thead class="table-primary">
-                        <tr>
-                            <th>Nome/Grupo</th>
-                            <th>Classe</th>
-                            <th>PDM</th>
-                            <th>Descrição Item</th>
-                            <th>Natureza Despesa</th>
-                            <th>Unidade Fornec.</th>
-                            <th>Características</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body">
-                    </tbody>
-                </table>
-            </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button id="search-btn" class="btn btn-primary w-100">
+            Consultar
+          </button>
         </div>
-    </div>
+      </div>
+      <div id="status-message" class="text-center my-3 text-muted"></div>
+
+      <div id="material-data-table" style="display: none">
+        <h3 class="mb-3 text-primary">Resultado da Consulta</h3>
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead class="table-primary">
+              <tr>
+                <th>Grupo</th>
+                <th>Classe</th>
+              </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <footer>
-        <div class="container">
-            <p>&copy; {{ now|date:"Y" }} Gateway de Dados Abertos — Desenvolvido com Django</p>
-        </div>
+      <div class="container">
+        <p>
+          &copy; {{ now|date:"Y" }} Gateway de Dados Abertos — Desenvolvido com
+          Django
+        </p>
+      </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Spinner
-        const spinnerStyle = document.createElement('style');
-        spinnerStyle.innerHTML = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }';
-        document.head.appendChild(spinnerStyle);
+    // Spinner
+    const spinnerStyle = document.createElement('style');
+    spinnerStyle.innerHTML = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite;';
+    document.head.appendChild(spinnerStyle);
 
-        // Variáveis DOM
-        const statusMessageDiv = document.getElementById('status-message');
-        const tableDiv = document.getElementById('material-data-table');
-        const tableBody = document.getElementById('table-body');
-        const nomeGrupoSelect = document.getElementById('nomeGrupo-select');
-        const classeSelect = document.getElementById('classe-select');
-        const naturezaSelect = document.getElementById('natureza-select');
+    // Variáveis DOM
+    const statusMessageDiv = document.getElementById('status-message');
+    const tableDiv = document.getElementById('material-data-table');
+    const tableBody = document.getElementById('table-body');
+    const nomeGrupoSelect = document.getElementById('nomeGrupo-select');
+    const classeSelect = document.getElementById('classe-select');
 
-        // Endpoints
-        const ENDPOINT_KEYS_FOR_SEARCH = [
-            'grupo_material',
-            'classe_material',
-            'pdm_material',
-            'item_material',
-            'natureza_despesa',
-            'unidade_fornecimento',
-            'caracteristicas'
-        ];
+    // Endpoints: REDUZIDOS APENAS PARA GRUPO E CLASSE
+    const ENDPOINT_KEYS_FOR_SEARCH = [
+        'grupo_material',
+        'classe_material',
+    ];
 
-        // --- FUNÇÕES DE API E AUXILIARES ---
+    // --- FUNÇÕES DE API E AUXILIARES ---
 
-        // Modo escuro
-        const toggleButton = document.getElementById('darkModeToggle');
-        toggleButton.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const icon = toggleButton.querySelector('i');
-            if (document.body.classList.contains('dark-mode')) {
-                icon.className = 'bi bi-sun';
-                toggleButton.innerHTML = '<i class="bi bi-sun"></i> Claro';
-            } else {
-                icon.className = 'bi bi-moon-stars';
-                toggleButton.innerHTML = '<i class="bi bi-moon-stars"></i> Escuro';
+    // Modo escuro
+    const toggleButton = document.getElementById('darkModeToggle');
+    toggleButton.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const icon = toggleButton.querySelector('i');
+        if (document.body.classList.contains('dark-mode')) {
+            icon.className = 'bi bi-sun';
+            toggleButton.innerHTML = '<i class="bi bi-sun"></i> Claro';
+        } else {
+            icon.className = 'bi bi-moon-stars';
+            toggleButton.innerHTML = '<i class="bi bi-moon-stars"></i> Escuro';
+        }
+    });
+
+    /**
+     * Função genérica para chamar os endpoints do Gateway API.
+     */
+    async function fetchEndpoint(endpointKey, params) {
+        const query = new URLSearchParams(params).toString();
+        const url = `/gateway/material/${endpointKey}/?${query}`;
+
+        const res = await fetch(url);
+
+        if (!res.ok) {
+            try {
+                const errorData = await res.json();
+                const errorMessage = errorData.error || `Erro HTTP ${res.status}`;
+                return { [endpointKey]: { error: errorMessage } };
+            } catch {
+                return { [endpointKey]: { error: `Falha ao conectar/HTTP ${res.status}` } };
             }
-        });
+        }
 
-        // Chamada de API
-        async function fetchEndpoint(endpointKey, params) {
-            const query = new URLSearchParams(params).toString();
-            const url = `/gateway/material/${endpointKey}/?${query}`;
+        const data = await res.json();
+        // Retorna o resultado relevante (primeiro item do 'resultado' ou o objeto data)
+        return { [endpointKey]: data.resultado && data.resultado.length > 0 ? data.resultado[0] : data };
+    }
+
+    /**
+     * Preenche um dropdown com dados da API.
+     */
+    async function populateSelect(selectElement, endpointKey, codeKey, nameKey, defaultText, filterCode = null) {
+        selectElement.innerHTML = `<option value="" selected>${defaultText}</option>`;
+        selectElement.disabled = true;
+
+        // Lógica de Filtro Condicional (Para Classes)
+        if (endpointKey === 'classe_material' && !filterCode) {
+            selectElement.innerHTML = '<option value="" selected>Selecione um Grupo primeiro</option>';
+            return;
+        }
+
+        try {
+            // Parâmetros base
+            const params = { pagina: 1 }; 
+
+            // Parâmetros específicos por endpoint
+            if (endpointKey === 'grupo_material') {
+                 // Endpoint de Grupo usa statusGrupo
+                 params.statusGrupo = 'true'; // 1 para booleano 'true'
+            }
+
+            if (endpointKey === 'classe_material') {
+                 // Endpoint de Classe usa statusClasse e BPS (assumindo que queremos ativos)
+                 // Adiciona o filtro obrigatório de codigoGrupo
+                 params.codigoGrupo = filterCode;
+            }
+            
+            const url = `/gateway/material/${endpointKey}/?${new URLSearchParams(params).toString()}`;
 
             const res = await fetch(url);
-
-            if (!res.ok) {
-                try {
-                    const errorData = await res.json();
-                    const errorMessage = errorData.error || `Erro HTTP ${res.status}`;
-                    return { [endpointKey]: { error: errorMessage } };
-                } catch {
-                    return { [endpointKey]: { error: `Falha ao conectar/HTTP ${res.status}` } };
-                }
-            }
-
             const data = await res.json();
-            // Retorna o resultado relevante (primeiro item do 'resultado' ou o objeto data)
-            return { [endpointKey]: data.resultado && data.resultado.length > 0 ? data.resultado[0] : data };
-        }
-
-        // Preencher um dropdown
-        async function populateSelect(selectElement, endpointKey, codeKey, nameKey, defaultText) {
-            selectElement.innerHTML = `<option value="" selected>${defaultText}</option>`;
-            try {
-                // Chamada com parâmetros mínimos para obter a lista completa
-                const params = { pagina: 1, statusGrupo: true };
-                const url = `/gateway/material/${endpointKey}?${new URLSearchParams(params).toString()}`;
-
-                const res = await fetch(url);
-                const data = await res.json();
-
-                const list = data.resultado || data.content.resultado || []; // Pega a lista do resultado
-
-                list.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item[codeKey];
-                    option.textContent = `${item[codeKey]} - ${item[nameKey]}` || item[codeKey];
-                    selectElement.appendChild(option);
-                });
-
-                selectElement.disabled = false;
-
-            } catch (err) {
-                console.error(`Erro ao carregar ${endpointKey}:`, err);
-                selectElement.innerHTML = `<option value="">Falha ao carregar</option>`;
-                selectElement.disabled = true;
+            
+            // Tratamento de erro (se a requisição for 4xx/5xx ou o JSON indicar erro)
+            if (!res.ok) {
+                const errorMsg = data.error || `Erro de resposta da API: ${res.status}`;
+                throw new Error(errorMsg);
             }
-        }
 
-        // Carregamento inicial de Dropdowns
-        async function loadDropdowns() {
-            await populateSelect(
-                nomeGrupoSelect,
-                'grupo_material',
-                'codigoGrupo',
-                'nomeGrupo',
-                'Carregando Grupos...'
+            // Pega a lista do resultado
+            const list = data.resultado || data.content?.resultado || [];
+
+            // Verifica se veio uma lista vazia ou nula
+            if (list.length === 0) {
+                 selectElement.innerHTML = `<option value="">Nenhum item encontrado</option>`;
+                 selectElement.disabled = true;
+                 return;
+            }
+
+            // Limpa o conteúdo (deixa a primeira opção vazia para resetar)
+            selectElement.innerHTML = `<option value="" selected>Selecione um...</option>`;
+
+            list.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item[codeKey];
+                option.textContent = `${item[codeKey]} - ${item[nameKey]}` || item[codeKey];
+                selectElement.appendChild(option);
+            });
+
+            selectElement.disabled = false;
+
+        } catch (err) {
+            console.error(`Erro ao carregar ${endpointKey}:`, err);
+            selectElement.innerHTML = `<option value="">Falha ao carregar: ${err.message}</option>`;
+            selectElement.disabled = true;
+        }
+    }
+
+    // Carregamento inicial de Dropdowns (Apenas Grupo)
+    async function loadDropdowns() {
+        // 1. Carrega APENAS o Grupo ao carregar a página
+        await populateSelect(
+            nomeGrupoSelect,
+            'grupo_material',
+            'codigoGrupo',
+            'nomeGrupo',
+            'Carregando Grupos...'
+        );
+        
+        // 2. A Classe inicia como desabilitada e aguardando seleção.
+        // Já está configurado no HTML, mas garantimos aqui:
+        classeSelect.innerHTML = '<option value="" selected>Selecione um Grupo primeiro</option>';
+        classeSelect.disabled = true;
+    }
+    
+    // --- EVENT LISTENERS ---
+    
+    // Listener para carregar a Classe após selecionar o Grupo
+    nomeGrupoSelect.addEventListener('change', () => {
+        const selectedGroupId = nomeGrupoSelect.value;
+        
+        // Se um Grupo foi selecionado, carrega as Classes
+        if (selectedGroupId) {
+            populateSelect(
+                classeSelect,
+                'classe_material',
+                'codigoClasse',
+                'nomeClasse',
+                'Carregando Classes...',
+                selectedGroupId // Passa o ID do Grupo como filtro
             );
-            // 1. Carregar Classes
-            await populateSelect(classeSelect, 'classe_material', 'codigoClasse', 'nomeClasse', 'Carregando Classes...');
+        } else {
+            // Se deselecionou o Grupo, reseta a Classe
+            classeSelect.innerHTML = '<option value="" selected>Selecione um Grupo primeiro</option>';
+            classeSelect.disabled = true;
+            tableDiv.style.display = 'none';
+        }
+    });
 
-            // 2. Carregar Natureza Despesa
-            await populateSelect(naturezaSelect, 'natureza_despesa', 'codigoNaturezaDespesa', 'descricaoNaturezaDespesa', 'Carregando Naturezas...');
+
+    // --- LÓGICA DE PESQUISA ---
+
+    document.getElementById('search-btn').addEventListener('click', async function () {
+        // Coletar filtros
+        const codigoGrupo = nomeGrupoSelect.value;
+        const codigoClasse = classeSelect.value;
+
+        // Validação básica: Grupo é obrigatório para a pesquisa
+        if (!codigoGrupo) {
+            statusMessageDiv.innerHTML = '<p class="text-danger">O Grupo é obrigatório para a consulta.</p>';
+            tableDiv.style.display = 'none';
+            return;
         }
 
-        // --- LÓGICA DE PESQUISA ---
+        // Feedback visual
+        statusMessageDiv.innerHTML = '<p class="text-info"><i class="bi bi-arrow-clockwise spin"></i> Carregando dados...</p>';
+        tableBody.innerHTML = '';
+        tableDiv.style.display = 'none';
 
-        document.getElementById('search-btn').addEventListener('click', async function () {
-            // Coletar filtros
-            const codigoGrupo = nomeGrupoSelect.value;
-            const codigoClasse = classeSelect.value;
-            const codigoNatureza = naturezaSelect.value;
-
-            // Validação básica
-            if (!codigoGrupo) {
-                statusMessageDiv.innerHTML = '<p class="text-danger">O Grupo é obrigatório para a pesquisa.</p>';
-                tableDiv.style.display = 'none';
-                return;
-            }
-
-            // Feedback visual
-            statusMessageDiv.innerHTML = '<p class="text-info"><i class="bi bi-arrow-clockwise spin"></i> Carregando todos os detalhes...</p>';
-            tableBody.innerHTML = '';
-            tableDiv.style.display = 'none';
-
-            try {
-                // Parâmetros base para as chamadas em paralelo
-                const baseParams = {
-                    codigoGrupo: codigoGrupo,
-                    pagina: 1,
-                    statusGrupo: true
-                };
-
-                // Adicionar filtros selecionados (serão enviados em todas as chamadas)
-                if (codigoGrupo) baseParams.codigoGrupo = codigoGrupo;
-                if (codigoClasse) baseParams.codigoClasse = codigoClasse;
-                if (codigoNatureza) baseParams.codigoNaturezaDespesa = codigoNatureza;
-
-
-                // Dispara todas as chamadas de API em paralelo
-                const fetchPromises = ENDPOINT_KEYS_FOR_SEARCH.map(key => fetchEndpoint(key, baseParams));
-
-                const resultsArray = await Promise.all(fetchPromises);
-
-                // Consolida os resultados em um único objeto
-                const consolidatedData = resultsArray.reduce((acc, current) => ({ ...acc, ...current }), {});
-
-                renderTable(consolidatedData);
-
-            } catch (err) {
-                statusMessageDiv.innerHTML = `<p class="text-danger">Falha crítica ao buscar dados: ${err.message}</p>`;
-                console.error(err);
-            }
-        });
-
-        // --- FUNÇÃO DE RENDERIZAÇÃO DA TABELA ---
-
-        function renderTable(data) {
-            const errors = Object.entries(data).filter(([key, value]) => value && value.error);
-
-            if (errors.length > 0) {
-                // Se houver erros, mostra a lista de erros
-                const errorMessage = errors
-                    .map(([key, value]) => `**[${key.toUpperCase()}]:** ${value.error}`)
-                    .join('<br>');
-
-                statusMessageDiv.innerHTML = `<p class="text-danger">Erros encontrados:<br>${errorMessage}</p>`;
-                tableDiv.style.display = 'none';
-                return;
-            }
-
-            statusMessageDiv.innerHTML = '<p class="text-success">Dados consolidados com sucesso!</p>';
-
-            // Mapeamento dos campos API
-            const rowData = {
-                nomeGrupo: data.grupo_material?.nomeGrupo || '-',
-                classe: data.classe_material?.nomeClasse || '-',
-                pdm: data.pdm_material?.nomePdm || '-',
-                descricaoItem: data.item_material?.descricaoItem || '-',
-                naturezaDespesa: data.natureza_despesa?.descricaoNaturezaDespesa || '-',
-                unidadeFornecimento: data.unidade_fornecimento?.descricaoUnidadeFornecimento || '-',
-                caracteristicas: (data.caracteristicas?.caracteristicas || []).map(c => c.nome || '').join('; ') || '-',
+        try {
+            // Parâmetros base para as chamadas em paralelo
+            const baseParams = {
+                pagina: 1,
+                codigoGrupo: codigoGrupo,
+                statusClasse: 1
             };
 
-            // Linha da tabela
-            const newRow = tableBody.insertRow();
-            newRow.innerHTML = `
-            <td>${rowData.nomeGrupo}</td>
-            <td>${rowData.classe}</td>
-            <td>${rowData.pdm}</td>
-            <td>${rowData.descricaoItem}</td>
-            <td>${rowData.naturezaDespesa}</td>
-            <td>${rowData.unidadeFornecimento}</td>
-            <td>${rowData.caracteristicas}</td>
-        `;
+            // Adicionar filtro de Classe se estiver selecionado
+            if (codigoClasse) baseParams.codigoClasse = codigoClasse;
 
-            tableDiv.style.display = 'block';
+            // Dispara apenas as chamadas para GRUPO e CLASSE
+            const fetchPromises = ENDPOINT_KEYS_FOR_SEARCH.map(key => fetchEndpoint(key, baseParams));
+
+            const resultsArray = await Promise.all(fetchPromises);
+
+            const consolidatedData = resultsArray.reduce((acc, current) => ({ ...acc, ...current }), {});
+
+            renderTable(consolidatedData);
+
+        } catch (err) {
+            statusMessageDiv.innerHTML = `<p class="text-danger">Falha crítica ao buscar dados: ${err.message}</p>`;
+            console.error(err);
+        }
+    });
+
+    // --- FUNÇÃO DE RENDERIZAÇÃO DA TABELA ---
+
+    function renderTable(data) {
+        const errors = Object.entries(data).filter(([key, value]) => value && value.error);
+
+        if (errors.length > 0) {
+            const errorMessage = errors
+                .map(([key, value]) => `**[${key.toUpperCase()}]:** ${value.error}`)
+                .join('<br>');
+
+            statusMessageDiv.innerHTML = `<p class="text-danger">Erros encontrados:<br>${errorMessage}</p>`;
+            tableDiv.style.display = 'none';
+            return;
         }
 
-        // Carregamento inicial dos dropdowns
-        window.addEventListener('load', loadDropdowns);
+        statusMessageDiv.innerHTML = '<p class="text-success">Dados consultados com sucesso!</p>';
 
-    </script>
-</body>
+        // Mapeamento dos campos API (apenas Grupo e Classe)
+        const rowData = {
+            nomeGrupo: data.grupo_material?.nomeGrupo || 'Não encontrado',
+            classe: data.classe_material?.nomeClasse || 'Não encontrado',
+        };
 
+        // Linha da tabela (apenas Grupo e Classe)
+        const newRow = tableBody.insertRow();
+        newRow.innerHTML = `
+        <td>${rowData.nomeGrupo}</td>
+        <td>${rowData.classe}</td>
+    `;
+
+        tableDiv.style.display = 'block';
+    }
+
+    // Carregamento inicial dos dropdowns
+    window.addEventListener('load', loadDropdowns);
+
+</script>
+  </body>
 </html>
