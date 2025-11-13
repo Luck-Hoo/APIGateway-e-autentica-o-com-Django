@@ -15,18 +15,6 @@ const ENDPOINT_KEYS_FOR_SEARCH = [
 ];
 const SERVICE_NAME = 'material';
 
-// Adiciona o estilo do spinner diretamente ao head (se theme-core.css não o fizer)
-document.addEventListener('DOMContentLoaded', () => {
-    // Note: O CSS do spinner deve idealmente estar em theme-core.css
-    if (!document.querySelector('style[data-spinner]')) {
-        const spinnerStyle = document.createElement('style');
-        spinnerStyle.setAttribute('data-spinner', 'true');
-        spinnerStyle.innerHTML = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite;';
-        document.head.appendChild(spinnerStyle);
-    }
-});
-
-
 /**
  * Função genérica para chamar os endpoints do Gateway API.
  */
