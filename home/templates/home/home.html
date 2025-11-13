@@ -171,77 +171,120 @@
 
     <!-- Conteúdo principal -->
     <div class="container py-5" style="margin-top: 90px;">
-        <!-- Seção de boas-vindas -->
-        <div class="hero-section shadow-sm">
+                <div class="hero-section shadow-sm">
             <h1 class="display-5 fw-bold">Portal Gateway de Dados Abertos</h1>
             <p class="lead mt-3">Acesse informações públicas de forma unificada e organizada.
                 Explore APIs do governo como ComprasNet, Tesouro Direto e muito mais.</p>
         </div>
 
-        <!-- Cards de serviços -->
-        <div class="text-center mb-5">
-            <h2 class="fw-bold mb-4 text-primary">Serviços Governamentais Disponíveis</h2>
-            <p class="text-muted mb-4">Selecione um dos serviços abaixo para consultar informações em tempo real.</p>
+                <div class="text-center mb-5">
+            <h2 class="fw-bold mb-4 text-primary">Módulos da API Compras.gov.br</h2>
+            <p class="text-muted mb-4">Selecione um dos módulos para iniciar sua consulta nos dados abertos.</p>
         </div>
 
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card text-center p-4">
-                    <i class="bi bi-building text-primary fs-1 mb-3"></i>
-                    <h5>Órgãos Públicos</h5>
-                    <p class="text-muted">Listagem dos órgãos cadastrados no sistema Compras.gov.br</p>
-                    <a href="{% url 'gateway_router' 'compras' 'orgaos' %}" class="btn btn-outline-primary">Acessar</a>
+        <div class="row g-4 justify-content-center">
+
+                        <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="card text-center p-4 shadow">
+                    <i class="bi bi-box-seam text-primary fs-1 mb-3"></i>
+                    <h5>01. Catálogo Material</h5>
+                    <p class="text-muted small">Consulta de itens, grupos e classes de materiais.</p>
+                    <a href="{% url 'compras_api:catalogo-material' %}" class="btn btn-outline-primary mt-2">Acessar</a>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="card text-center p-4">
-                    <i class="bi bi-bank text-success fs-1 mb-3"></i>
-                    <h5>UASGs</h5>
-                    <p class="text-muted">Unidades Administrativas de Serviços Gerais do governo federal</p>
-                    <a href="{% url 'gateway_router' 'compras' 'uasgs' %}" class="btn btn-outline-success">Acessar</a>
+                        <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="card text-center p-4 shadow">
+                    <i class="bi bi-tools text-success fs-1 mb-3"></i>
+                    <h5>02. Catálogo Serviço</h5>
+                    <p class="text-muted small">Consulta de seções, classes e itens de serviços.</p>
+                    <a href="" class="btn btn-outline-success mt-2">Acessar</a>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="card text-center p-4">
-                    <i class="bi bi-file-earmark-text text-warning fs-1 mb-3"></i>
-                    <h5>Contratações</h5>
-                    <p class="text-muted">Consulta de licitações em andamento ou finalizadas</p>
-
-                    <!-- Botão que vai gerar URL com query string -->
-                    <a href="{% url 'compras_api:contratacoes' %}" class="btn btn-outline-info">Acessar</a>
+                        <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="card text-center p-4 shadow">
+                    <i class="bi bi-currency-dollar text-warning fs-1 mb-3"></i>
+                    <h5>03. Pesquisa de Preço</h5>
+                    <p class="text-muted small">Preços praticados em materiais e serviços.</p>
+                    <a href="" class="btn btn-outline-warning mt-2">Acessar</a>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="card text-center p-4">
-                    <i class="bi bi-journal-check text-info fs-1 mb-3"></i>
-                    <h5>Catálogo de Materiais</h5>
-                    <p class="text-muted">Detalhes do catálogo do Compras.gov.br</p>
-                    <a href="{% url 'compras_api:catalogo-material' %}" class="btn btn-outline-info">Acessar</a>
+                        <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="card text-center p-4 shadow">
+                    <i class="bi bi-calendar-check text-info fs-1 mb-3"></i>
+                    <h5>04. PGC - Detalhes</h5>
+                    <p class="text-muted small">Consulta de detalhe e agregação do PGC.</p>
+                    <a href="" class="btn btn-outline-info mt-2">Acessar</a>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="card text-center p-4">
-                    <i class="bi bi-person-badge text-danger fs-1 mb-3"></i>
-                    <h5>Fornecedores</h5>
-                    <p class="text-muted">Empresas cadastradas e habilitadas no sistema de compras</p>
-                    <a href="{% url 'gateway_router' 'compras' 'fornecedores' %}"
-                        class="btn btn-outline-danger">Acessar</a>
+                        <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="card text-center p-4 shadow">
+                    <i class="bi bi-building text-danger fs-1 mb-3"></i>
+                    <h5>05. UASG e Órgão</h5>
+                    <p class="text-muted small">Consulta de Unidades (UASG) e Órgãos federais.</p>
+                    <a href="" class="btn btn-outline-danger mt-2">Acessar</a>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="card text-center p-4">
-                    <i class="bi bi-cash-coin text-secondary fs-1 mb-3"></i>
-                    <h5>Tesouro Direto</h5>
-                    <p class="text-muted">Taxas e títulos públicos oferecidos pelo Tesouro Nacional</p>
-                    <a href="{% url 'gateway_router' 'tesouro' 'titulos' %}"
-                        class="btn btn-outline-secondary">Acessar</a>
+                        <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="card text-center p-4 shadow">
+                    <i class="bi bi-archive text-secondary fs-1 mb-3"></i>
+                    <h5>06. Licitações Legado</h5>
+                    <p class="text-muted small">Dados de licitações, pregões e compras antigas.</p>
+                    <a href="" class="btn btn-outline-secondary mt-2">Acessar</a>
                 </div>
             </div>
+            
+                        <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="card text-center p-4 shadow">
+                    <i class="bi bi-file-earmark-bar-graph text-primary fs-1 mb-3"></i>
+                    <h5>07. Contratações PNCP</h5>
+                    <p class="text-muted small">Contratos e resultados conforme Lei 14.133/21.</p>
+                    <a href="{% url 'compras_api:contratacoes' %}" class="btn btn-outline-primary mt-2">Acessar</a>
+                </div>
+            </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="card text-center p-4 shadow">
+                    <i class="bi bi-journal-bookmark text-success fs-1 mb-3"></i>
+                    <h5>08. ARP - Registro de Preço</h5>
+                    <p class="text-muted small">Atas e itens de Registro de Preço (ARP).</p>
+                    <a href="" class="btn btn-outline-success mt-2">Acessar</a>
+            </div>
+            </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="card text-center p-4 shadow">
+                    <i class="bi bi-file-earmark-lock-fill text-warning fs-1 mb-3"></i>
+                    <h5>09. Contratos</h5>
+                    <p class="text-muted small">Detalhes de contratos e itens de contratos.</p>
+                    <a href="" class="btn btn-outline-warning mt-2">Acessar</a>
+                </div>
+            </div>
+            
+                        <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="card text-center p-4 shadow">
+                    <i class="bi bi-people-fill text-info fs-1 mb-3"></i>
+                    <h5>10. Fornecedor</h5>
+                    <p class="text-muted small">Consulta a dados de fornecedores cadastrados.</p>
+                    <a href="" class="btn btn-outline-info mt-2">Acessar</a>
+                </div>
+            </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="card text-center p-4 shadow">
+                    <i class="bi bi-code-slash text-danger fs-1 mb-3"></i>
+                    <h5>11. OCDS - Releases</h5>
+                    <p class="text-muted small">Dados no padrão Open Contracting Data Standard.</p>
+                    <a href="" class="btn btn-outline-danger mt-2">Acessar</a>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4 col-lg-3 d-lg-block d-none"></div>
+
         </div>
     </div>
 

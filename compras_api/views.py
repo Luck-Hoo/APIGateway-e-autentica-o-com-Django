@@ -16,7 +16,7 @@ class contratos(APIView):
         return
 
 def catalogo_material(request):
-    return render(request,'catalogo-material/contratos.html')
+    return render(request,'modulos/catalogo_materiais.html')
 
 def contratacoes(request):
-    return render(request,'catalogo-material/contratacoes.html')
+    return render(request,'modulos/contratacoes.html')
