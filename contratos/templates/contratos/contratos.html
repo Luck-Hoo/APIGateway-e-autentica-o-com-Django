@@ -223,7 +223,7 @@
     const nomeGrupoSelect = document.getElementById('nomeGrupo-select');
     const classeSelect = document.getElementById('classe-select');
 
-    // Endpoints: REDUZIDOS APENAS PARA GRUPO E CLASSE
+    // Endpoints
     const ENDPOINT_KEYS_FOR_SEARCH = [
         'grupo_material',
         'classe_material',
@@ -281,7 +281,8 @@
             selectElement.innerHTML = '<option value="" selected>Selecione um Grupo primeiro</option>';
             return;
         }
-
+        
+        // Lógica de parâmetros fixos para cada endpoint
         try {
             // Parâmetros base
             const params = { pagina: 1 }; 
@@ -289,12 +290,11 @@
             // Parâmetros específicos por endpoint
             if (endpointKey === 'grupo_material') {
                  // Endpoint de Grupo usa statusGrupo
-                 params.statusGrupo = 'true'; // 1 para booleano 'true'
+                 params.statusGrupo = 'true';
             }
 
             if (endpointKey === 'classe_material') {
                  // Endpoint de Classe usa statusClasse e BPS (assumindo que queremos ativos)
-                 // Adiciona o filtro obrigatório de codigoGrupo
                  params.codigoGrupo = filterCode;
             }
             

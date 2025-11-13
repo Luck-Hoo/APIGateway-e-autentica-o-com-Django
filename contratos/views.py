@@ -17,3 +17,6 @@ class contratos(APIView):
 
 def contratos(request):
     return render(request,'contratos/contratos.html')
+
+def contratacoes(request):
+    return render(request,'contratos/contratacoes.html')

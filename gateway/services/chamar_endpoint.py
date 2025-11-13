@@ -16,7 +16,7 @@ def chamar_enpoint_dados_abertos_gov(endpoint_path, params=None):
             # 1. Tentar a Requisição
             # Aumente o timeout, já que a API externa tem um timeout de 30s.
             # Vamos usar 60s para a requisição, dando tempo para ela tentar e falhar.
-            resp = requests.get(url, params=params, timeout=60)
+            resp = requests.get(url, params=params, timeout=30)
             
             # 2. Verificar Status para Retry
             if resp.status_code in RETRY_STATUSES:

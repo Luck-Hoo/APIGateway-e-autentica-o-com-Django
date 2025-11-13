@@ -11,6 +11,15 @@ MATERIAL_ENDPOINTS = {
     'pdm_material': os.environ.get('MATERIAL_PDM_ENDPOINT'), 
     'item_material': os.environ.get('MATERIAL_ITEM_ENDPOINT')
 }
+CONTRATACOES_ENDPOINTS = {
+    # 07 - CONTRATAÇÕES
+    'consultar_contratacoes': os.environ.get('CONTRATACOES_CONSULTAR_PNCP_ENDPOINT'),
+    'consultar_contratacoes_id': os.environ.get('CONTRATACOES_CONSULTAR_PNCP_ID_ENDPOINT'),
+    'consultar_itens': os.environ.get('CONTRATACOES_CONSULTAR_ITENS_PNCP_ENDPOINT'),
+    'consultar_itens_id': os.environ.get('CONTRATACOES_CONSULTAR_ITENS_PNCP_ID_ENDPOINT'),
+    'consultar_resultado': os.environ.get('CONTRATACOES_CONSULTAR_RESULTADO_PNCP_ENDPOINT'),
+    'consultar_resultado_id': os.environ.get('CONTRATACOES_CONSULTAR_RESULTADO_PNCP_ID_ENDPOINT')
+}
 
 
 def gateway_router(request, service_name, endpoint_key):
@@ -29,7 +38,18 @@ def gateway_router(request, service_name, endpoint_key):
             return JsonResponse({
                 'error': f'Endpoint "{endpoint_key}" não encontrado para o serviço "material".'
             }, status=404)
-
+        
+    if service_name == 'contratacoes':
+        endpoint_path = CONTRATACOES_ENDPOINTS.get(endpoint_key)
+        
+        if endpoint_path:
+            # Chama a função genérica passando o caminho específico
+            resp = chamar_endpoint.chamar_enpoint_dados_abertos_gov(endpoint_path, params=request.GET)
+        else:
+            return JsonResponse({
+                'error': f'Endpoint "{endpoint_key}" não encontrado para o serviço "material".'
+            }, status=404)
+        
     # 2. Tratar Resposta
     if 'content' in resp:
         # Se a resposta for bem-sucedida, retorna o JSON (JsonResponse cuida da serialização e do Content-Type)
