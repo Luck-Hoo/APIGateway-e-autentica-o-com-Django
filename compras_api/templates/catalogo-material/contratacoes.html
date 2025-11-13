@@ -92,10 +92,25 @@
 
     /* --- Estilo melhorado da tabela com bordas completas --- */
     .table-responsive {
+      overflow-x: auto;
+      /* permite scroll horizontal */
+      -webkit-overflow-scrolling: touch;
+      /* melhora no mobile */
+      border: 1px solid rgba(0, 0, 0, 0.1);
       border-radius: 10px;
-      overflow: hidden;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1rem;
     }
+
+    .table {
+      width: 100%;
+      min-width: 800px;
+      /* força largura mínima para scroll em telas pequenas */
+      border-collapse: collapse;
+      margin-bottom: 0;
+      font-size: 0.95rem;
+    }
+
 
     table.table {
       border-collapse: collapse;
@@ -223,22 +238,21 @@
 
       <div class="col-sm-6 col-lg-2">
         <label for="unidadeGestora-input" class="form-label text-muted">Unidade Gestora</label>
-        <input id="unidadeGestora-input" type="text" class="form-control" placeholder="Ex: 260001 (Opcional)" />
+        <input id="unidadeGestora-input" type="text" class="form-control" placeholder="Ex: 260001" />
       </div>
 
       <div class="col-sm-6 col-lg-2">
-        <label for="codigoModalidade-input" class="form-label text-muted">Modalidade</label>
-        <input id="codigoModalidade-input" type="number" class="form-control" placeholder="Ex: 5 (Obrigatório)"
-          required />
+        <label for="codigoModalidade-input" class="form-label text-muted">Modalidade*</label>
+        <input id="codigoModalidade-input" type="number" class="form-control" placeholder="Ex: 5" required />
       </div>
 
       <div class="col-sm-6 col-lg-2">
-        <label for="dataInicial-input" class="form-label text-muted">Data Inicial</label>
+        <label for="dataInicial-input" class="form-label text-muted">Data Inicial*</label>
         <input id="dataInicial-input" type="date" class="form-control" value="" required />
       </div>
 
       <div class="col-sm-6 col-lg-2">
-        <label for="dataFinal-input" class="form-label text-muted">Data Final</label>
+        <label for="dataFinal-input" class="form-label text-muted">Data Final*</label>
         <input id="dataFinal-input" type="date" class="form-control" value="" required />
       </div>
 
@@ -267,6 +281,7 @@
         <table class="table table-bordered table-hover">
           <thead class="table-primary">
             <tr>
+              <th>Contrato</th>
               <th>Núm Compra</th>
               <th>Fornecedor</th>
               <th>Modalidade</th>
@@ -348,6 +363,7 @@
         ...params,
         pagina: page,
       }).toString();
+      // Certifique-se de que o URL está correto para o seu Django Gateway
       const url = `/gateway/contratacoes/${CONTRATACOES_ENDPOINT_KEY}/?${query}`;
 
       const res = await fetch(url);
@@ -373,6 +389,20 @@
       currency: "BRL",
       minimumFractionDigits: 2,
     });
+
+    // Função auxiliar para formatar data (assumindo formato ISO 8601)
+    function formatDate(isoDate) {
+      if (!isoDate) return '—';
+      // Remove o T e as horas para evitar problemas de fuso horário
+      const datePart = isoDate.split('T')[0];
+      const parts = datePart.split('-'); // [AAAA, MM, DD]
+      if (parts.length === 3) {
+        // Retorna no formato DD/MM/AAAA
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+      return isoDate;
+    }
+
 
     // --- LÓGICA DE PESQUISA ---
 
@@ -415,6 +445,7 @@
       try {
         const data = await fetchContratacoes(currentParams, page);
         const contratos = data.resultado || []; // Lista de contratos
+
         const totalPages = data.pagination
           ? data.pagination.totalPages
           : page; // Total de páginas (ou a página atual se não houver paginação info)
@@ -458,44 +489,48 @@
       }
     }
 
-    // --- FUNÇÃO DE RENDERIZAÇÃO DA TABELA ---
-
     function renderTable(contratos) {
       if (contratos.length === 0) return;
 
       contratos.forEach((contrato) => {
         const newRow = tableBody.insertRow();
 
-        // Valores a serem exibidos (usando '??' para fallback para string vazia)
-        const numCompra = contrato.numeroCompra ?? "";
-        const fornecedor = contrato.nomeFornecedor ?? "";
-        const modalidade = contrato.modalidadeLicitacao ?? "";
-        const processo = contrato.numeroProcesso ?? "";
-        const numParcelas = contrato.numeroParcelas ?? 0;
-        const valorParcelas = formatter.format(contrato.valorParcelas || 0);
-        const valorGlobal = formatter.format(contrato.valorGlobal || 0);
-        const vigenciaInicial = contrato.dataVigenciaInicial
-          ? new Date(contrato.dataVigenciaInicial).toLocaleDateString("pt-BR")
-          : "";
-        const vigenciaFinal = contrato.dataVigenciaFinal
-          ? new Date(contrato.dataVigenciaFinal).toLocaleDateString("pt-BR")
-          : "";
+        // Campos principais do JSON
+        const numCompra = contrato.numeroCompra ?? "—";
+        const fornecedor = contrato.orgaoEntidadeRazaoSocial ?? "—";
+        const modalidade = contrato.modalidadeNome ?? "—";
+        const processo = contrato.processo ?? "—";
+
+        // O PNCP não fornece número de parcelas nem valor por parcela
+        const numParcelas = contrato.numParcelas ?? "—";
+        const valorParcelas = contrato.valorParcelas ?? "—";
+
+        // Valor global (estimado)
+        const valorGlobal = contrato.valorTotalEstimado
+          ? formatter.format(contrato.valorTotalEstimado)
+          : "—";
+
+        // Vigências — vamos usar as datas de publicação e encerramento da proposta
+        const vigenciaInicial = formatDate(contrato.dataPublicacaoPncp);
+        const vigenciaFinal = formatDate(contrato.dataEncerramentoPropostaPncp);
 
         newRow.innerHTML = `
-                  <td>${numCompra}</td>
-                  <td>${fornecedor}</td>
-                  <td>${modalidade}</td>
-                  <td>${processo}</td>
-                  <td>${numParcelas}</td>
-                  <td>${valorParcelas}</td>
-                  <td>${valorGlobal}</td>
-                  <td>${vigenciaInicial}</td>
-                  <td>${vigenciaFinal}</td>
-              `;
+      <td></td>
+      <td>${numCompra}</td>
+      <td>${fornecedor}</td>
+      <td>${modalidade}</td>
+      <td>${processo}</td>
+      <td>${numParcelas}</td>
+      <td>${valorParcelas}</td>
+      <td>${valorGlobal}</td>
+      <td>${vigenciaInicial}</td>
+      <td>${vigenciaFinal}</td>
+    `;
       });
 
       tableDiv.style.display = "block";
     }
+
 
     // --- EVENT LISTENERS ---
 
@@ -505,7 +540,7 @@
       performSearch(currentPage + 1)
     );
 
-    // Carregamento inicial (apenas garantindo que o botão load more esteja escondido)
+    // Carregamento inicial
     window.addEventListener("load", () => {
       loadMoreButton.style.display = "none";
     });

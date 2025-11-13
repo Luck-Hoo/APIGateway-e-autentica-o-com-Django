@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'login',
-    'contratos',
+    'compras_api',
     'gateway',
     'home'
 ]

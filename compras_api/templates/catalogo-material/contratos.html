@@ -1,0 +1,528 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Consulta Material - Gateway API</title>
+
+  <link rel="icon" href="{% static 'home/img/GovDigital.ico' %}" type="image/x-icon" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+
+  <style>
+    :root {
+      --body-bg: #f4f6f9;
+      --body-color: #212529;
+      --navbar-bg: #ffffff;
+      --card-bg: #ffffff;
+      --card-color: #212529;
+      --footer-bg: #ffffff;
+      --footer-color: #6c757d;
+      --hero-bg-gradient: linear-gradient(135deg, #0d6efd, #0a58ca);
+      --text-muted-color: #6c757d;
+      --table-border-color: rgba(0, 0, 0, 0.15); /* Novo: Cor da borda no modo claro */
+    }
+
+    body.dark-mode {
+      --body-bg: #121212;
+      --body-color: #e0e0e0;
+      --navbar-bg: #1f1f1f;
+      --card-bg: #1e1e1e;
+      --card-color: #e0e0e0;
+      --footer-bg: #1f1f1f;
+      --footer-color: #ccc;
+      --hero-bg-gradient: linear-gradient(135deg, #343a40, #212529);
+      --text-muted-color: #b0b0b0;
+      --table-border-color: #444444; /* Novo: Cor da borda no modo escuro */
+    }
+
+    body {
+      background-color: var(--body-bg);
+      color: var(--body-color);
+      font-family: "Segoe UI", sans-serif;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    body.dark-mode {
+      background-color: var(--body-bg);
+      color: var(--body-color);
+    }
+
+    body.dark-mode .form-control,
+    body.dark-mode .form-select {
+      background-color: #2b2b2b;
+      color: #e0e0e0;
+      border-color: #444;
+    }
+    
+    /* Regras de Placeholder e Autofill omitidas aqui por brevidade, mas devem permanecer no seu código */
+
+    .text-muted {
+      color: var(--text-muted-color) !important;
+    }
+
+    .navbar {
+      background-color: var(--navbar-bg);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+      transition: background-color 0.3s;
+    }
+
+    .hero-section {
+      background: var(--hero-bg-gradient);
+      color: white;
+      padding: 70px 20px;
+      border-radius: 12px;
+      text-align: center;
+      margin-top: 30px;
+      margin-bottom: 50px;
+      transition: background 0.3s;
+    }
+
+    .card {
+      transition: all 0.25s ease-in-out, background-color 0.3s, color 0.3s;
+      border: none;
+      border-radius: 12px;
+      background-color: var(--card-bg);
+      color: var(--card-color);
+    }
+
+    /* --- Estilo melhorado da tabela com bordas completas --- */
+    .table-responsive {
+      overflow-x: auto;
+      /* permite scroll horizontal */
+      -webkit-overflow-scrolling: touch;
+      /* melhora no mobile */
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1rem;
+    }
+
+    .table {
+      width: 100%;
+      min-width: 800px;
+      /* força largura mínima para scroll em telas pequenas */
+      border-collapse: collapse;
+      margin-bottom: 0;
+      font-size: 0.95rem;
+    }
+
+    table.table {
+      border-collapse: collapse;
+      /* Garante que todas as bordas fiquem contínuas */
+      width: 100%;
+      margin-bottom: 0;
+      font-size: 0.95rem;
+    }
+
+    /* Estilos do cabeçalho */
+    .table thead {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: var(--navbar-bg);
+    }
+
+    .table thead th {
+      background-color: var(--navbar-bg);
+      color: var(--body-color);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 0.03em;
+      border: 1px solid var(--table-border-color);
+      padding: 0.75rem;
+    }
+
+    /* Estilos do corpo da tabela */
+    .table tbody td {
+      border: 1px solid var(--table-border-color);
+      vertical-align: middle;
+      padding: 0.65rem;
+      transition: background-color 0.2s ease;
+    }
+
+    .table tbody tr:hover {
+      background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    /* REGRAS ESPECÍFICAS PARA MODO ESCURO */
+    body.dark-mode table.table,
+    body.dark-mode .table thead,
+    body.dark-mode .table tbody tr,
+    body.dark-mode .table tbody td {
+      background-color: var(--card-bg);
+      color: var(--body-color); 
+    }
+    
+    body.dark-mode .table tbody tr:hover {
+      background-color: rgba(13, 110, 253, 0.2);
+    }
+    body.dark-mode .table thead th {
+      background-color: var(--navbar-bg); /* Garante que o cabeçalho escuro siga a navbar escura */
+    }
+    /* FIM DAS REGRAS ESPECÍFICAS PARA MODO ESCURO */
+
+
+    footer {
+      margin-top: 60px;
+      padding: 20px 0;
+      background-color: var(--footer-bg);
+      border-top: 1px solid #e5e5e5;
+      text-align: center;
+      color: var(--footer-color);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .spin {
+      animation: spin 1s linear infinite;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold text-primary" href="{% url 'home:home' %}">
+        <i class="bi bi-diagram-3"></i> Gateway API
+      </a>
+
+      <div class="d-flex align-items-center">
+        <button id="darkModeToggle" class="btn btn-outline-secondary btn-sm me-3">
+          <i class="bi bi-moon-stars"></i> Escuro
+        </button>
+
+        {% if user.is_authenticated %}
+        <span class="me-3 mt-2 text-muted">Olá, {{ user.username }}</span>
+        <a href="{% url 'logout:logout' %}" class="btn btn-outline-danger btn-sm">Sair</a>
+        {% else %}
+        <a href="{% url 'login:login' %}" class="btn btn-primary btn-sm">Login</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-5" style="margin-top: 90px">
+    <div class="hero-section shadow-sm">
+      <h1 class="display-5 fw-bold">Consulta de Material (Grupo e Classe)</h1>
+      <p class="lead mt-3">
+        Pesquise por Grupo de Material e filtre por Classe.
+      </p>
+    </div>
+
+    <div class="row justify-content-center mb-4 g-3">
+      <div class="col-md-5">
+        <label for="nomeGrupo-select" class="form-label text-muted">Nome do Grupo</label>
+        <select id="nomeGrupo-select" class="form-select">
+          <option value="" selected>Carregando Grupos...</option>
+        </select>
+      </div>
+      <div class="col-md-5">
+        <label for="classe-select" class="form-label text-muted">Classe (Opcional)</label>
+        <select id="classe-select" class="form-select" disabled>
+          <option value="" selected>Selecione um Grupo primeiro</option>
+        </select>
+      </div>
+      <div class="col-md-2 d-flex align-items-end">
+        <button id="search-btn" class="btn btn-primary w-100">
+          Consultar
+        </button>
+      </div>
+    </div>
+    <div id="status-message" class="text-center my-3 text-muted"></div>
+
+    <div id="material-data-table" style="display: none">
+      <h3 class="mb-3 text-primary">Resultado da Consulta</h3>
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+          <thead class="table-primary">
+            <tr>
+              <th>Grupo</th>
+              <th>Classe</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <p>
+        &copy; {{ now|date:"Y" }} Gateway de Dados Abertos — Desenvolvido com
+        Django
+      </p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Spinner
+    const spinnerStyle = document.createElement('style');
+    spinnerStyle.innerHTML = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite;';
+    document.head.appendChild(spinnerStyle);
+
+    // Variáveis DOM
+    const statusMessageDiv = document.getElementById('status-message');
+    const tableDiv = document.getElementById('material-data-table');
+    const tableBody = document.getElementById('table-body');
+    const nomeGrupoSelect = document.getElementById('nomeGrupo-select');
+    const classeSelect = document.getElementById('classe-select');
+
+    // Endpoints
+    const ENDPOINT_KEYS_FOR_SEARCH = [
+      'grupo_material',
+      'classe_material',
+    ];
+
+    // --- FUNÇÕES DE API E AUXILIARES ---
+
+    // Modo escuro
+    const toggleButton = document.getElementById('darkModeToggle');
+    toggleButton.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const icon = toggleButton.querySelector('i');
+      if (document.body.classList.contains('dark-mode')) {
+        icon.className = 'bi bi-sun';
+        toggleButton.innerHTML = '<i class="bi bi-sun"></i> Claro';
+      } else {
+        icon.className = 'bi bi-moon-stars';
+        toggleButton.innerHTML = '<i class="bi bi-moon-stars"></i> Escuro';
+      }
+    });
+
+    /**
+     * Função genérica para chamar os endpoints do Gateway API.
+     */
+    async function fetchEndpoint(endpointKey, params) {
+      const query = new URLSearchParams(params).toString();
+      const url = `/gateway/material/${endpointKey}/?${query}`;
+
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        try {
+          const errorData = await res.json();
+          const errorMessage = errorData.error || `Erro HTTP ${res.status}`;
+          return { [endpointKey]: { error: errorMessage } };
+        } catch {
+          return { [endpointKey]: { error: `Falha ao conectar/HTTP ${res.status}` } };
+        }
+      }
+
+      const data = await res.json();
+      // Retorna o resultado relevante (primeiro item do 'resultado' ou o objeto data)
+      return { [endpointKey]: data.resultado && data.resultado.length > 0 ? data.resultado[0] : data };
+    }
+
+    /**
+     * Preenche um dropdown com dados da API.
+     */
+    async function populateSelect(selectElement, endpointKey, codeKey, nameKey, defaultText, filterCode = null) {
+      selectElement.innerHTML = `<option value="" selected>${defaultText}</option>`;
+      selectElement.disabled = true;
+
+      // Lógica de Filtro Condicional (Para Classes)
+      if (endpointKey === 'classe_material' && !filterCode) {
+        selectElement.innerHTML = '<option value="" selected>Selecione um Grupo primeiro</option>';
+        return;
+      }
+
+      // Lógica de parâmetros fixos para cada endpoint
+      try {
+        // Parâmetros base
+        const params = { pagina: 1 };
+
+        // Parâmetros específicos por endpoint
+        if (endpointKey === 'grupo_material') {
+          // Endpoint de Grupo usa statusGrupo
+          params.statusGrupo = 'true';
+        }
+
+        if (endpointKey === 'classe_material') {
+          // Endpoint de Classe usa statusClasse e BPS (assumindo que queremos ativos)
+          params.codigoGrupo = filterCode;
+        }
+
+        const url = `/gateway/material/${endpointKey}/?${new URLSearchParams(params).toString()}`;
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        // Tratamento de erro (se a requisição for 4xx/5xx ou o JSON indicar erro)
+        if (!res.ok) {
+          const errorMsg = data.error || `Erro de resposta da API: ${res.status}`;
+          throw new Error(errorMsg);
+        }
+
+        // Pega a lista do resultado
+        const list = data.resultado || data.content?.resultado || [];
+
+        // Verifica se veio uma lista vazia ou nula
+        if (list.length === 0) {
+          selectElement.innerHTML = `<option value="">Nenhum item encontrado</option>`;
+          selectElement.disabled = true;
+          return;
+        }
+
+        // Limpa o conteúdo (deixa a primeira opção vazia para resetar)
+        selectElement.innerHTML = `<option value="" selected>Selecione um...</option>`;
+
+        list.forEach(item => {
+          const option = document.createElement('option');
+          option.value = item[codeKey];
+          option.textContent = `${item[codeKey]} - ${item[nameKey]}` || item[codeKey];
+          selectElement.appendChild(option);
+        });
+
+        selectElement.disabled = false;
+
+      } catch (err) {
+        console.error(`Erro ao carregar ${endpointKey}:`, err);
+        selectElement.innerHTML = `<option value="">Falha ao carregar: ${err.message}</option>`;
+        selectElement.disabled = true;
+      }
+    }
+
+    // Carregamento inicial de Dropdowns (Apenas Grupo)
+    async function loadDropdowns() {
+      // 1. Carrega APENAS o Grupo ao carregar a página
+      await populateSelect(
+        nomeGrupoSelect,
+        'grupo_material',
+        'codigoGrupo',
+        'nomeGrupo',
+        'Carregando Grupos...'
+      );
+
+      // 2. A Classe inicia como desabilitada e aguardando seleção.
+      // Já está configurado no HTML, mas garantimos aqui:
+      classeSelect.innerHTML = '<option value="" selected>Selecione um Grupo primeiro</option>';
+      classeSelect.disabled = true;
+    }
+
+    // --- EVENT LISTENERS ---
+
+    // Listener para carregar a Classe após selecionar o Grupo
+    nomeGrupoSelect.addEventListener('change', () => {
+      const selectedGroupId = nomeGrupoSelect.value;
+
+      // Se um Grupo foi selecionado, carrega as Classes
+      if (selectedGroupId) {
+        populateSelect(
+          classeSelect,
+          'classe_material',
+          'codigoClasse',
+          'nomeClasse',
+          'Carregando Classes...',
+          selectedGroupId // Passa o ID do Grupo como filtro
+        );
+      } else {
+        // Se deselecionou o Grupo, reseta a Classe
+        classeSelect.innerHTML = '<option value="" selected>Selecione um Grupo primeiro</option>';
+        classeSelect.disabled = true;
+        tableDiv.style.display = 'none';
+      }
+    });
+
+
+    // --- LÓGICA DE PESQUISA ---
+
+    document.getElementById('search-btn').addEventListener('click', async function () {
+      // Coletar filtros
+      const codigoGrupo = nomeGrupoSelect.value;
+      const codigoClasse = classeSelect.value;
+
+      // Validação básica: Grupo é obrigatório para a pesquisa
+      if (!codigoGrupo) {
+        statusMessageDiv.innerHTML = '<p class="text-danger">O Grupo é obrigatório para a consulta.</p>';
+        tableDiv.style.display = 'none';
+        return;
+      }
+
+      // Feedback visual
+      statusMessageDiv.innerHTML = '<p class="text-info"><i class="bi bi-arrow-clockwise spin"></i> Carregando dados...</p>';
+      tableBody.innerHTML = '';
+      tableDiv.style.display = 'none';
+
+      try {
+        // Parâmetros base para as chamadas em paralelo
+        const baseParams = {
+          pagina: 1,
+          codigoGrupo: codigoGrupo,
+          statusClasse: 1
+        };
+
+        // Adicionar filtro de Classe se estiver selecionado
+        if (codigoClasse) baseParams.codigoClasse = codigoClasse;
+
+        // Dispara apenas as chamadas para GRUPO e CLASSE
+        const fetchPromises = ENDPOINT_KEYS_FOR_SEARCH.map(key => fetchEndpoint(key, baseParams));
+
+        const resultsArray = await Promise.all(fetchPromises);
+
+        const consolidatedData = resultsArray.reduce((acc, current) => ({ ...acc, ...current }), {});
+
+        renderTable(consolidatedData);
+
+      } catch (err) {
+        statusMessageDiv.innerHTML = `<p class="text-danger">Falha crítica ao buscar dados: ${err.message}</p>`;
+        console.error(err);
+      }
+    });
+
+    // --- FUNÇÃO DE RENDERIZAÇÃO DA TABELA ---
+
+    function renderTable(data) {
+      const errors = Object.entries(data).filter(([key, value]) => value && value.error);
+
+      if (errors.length > 0) {
+        const errorMessage = errors
+          .map(([key, value]) => `**[${key.toUpperCase()}]:** ${value.error}`)
+          .join('<br>');
+
+        statusMessageDiv.innerHTML = `<p class="text-danger">Erros encontrados:<br>${errorMessage}</p>`;
+        tableDiv.style.display = 'none';
+        return;
+      }
+
+      statusMessageDiv.innerHTML = '<p class="text-success">Dados consultados com sucesso!</p>';
+
+      // Mapeamento dos campos API (apenas Grupo e Classe)
+      const rowData = {
+        nomeGrupo: data.grupo_material?.nomeGrupo || 'Não encontrado',
+        classe: data.classe_material?.nomeClasse || 'Não encontrado',
+      };
+
+      // Linha da tabela (apenas Grupo e Classe)
+      const newRow = tableBody.insertRow();
+      newRow.innerHTML = `
+        <td>${rowData.nomeGrupo}</td>
+        <td>${rowData.classe}</td>
+    `;
+
+      tableDiv.style.display = 'block';
+    }
+
+    // Carregamento inicial dos dropdowns
+    window.addEventListener('load', loadDropdowns);
+
+  </script>
+</body>
+
+</html>
