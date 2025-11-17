@@ -1,18 +1,30 @@
 import { fetchGatewayEndpoint } from "./api_gateway.js";
 
-
-export async function populateSelect(
+/**
+ * Preenche um elemento <select> com opções buscadas de um endpoint de API.
+ * * @param {object} config - Objeto de configuração para a operação.
+ * @param {HTMLSelectElement} config.selectElement - O elemento <select> a ser preenchido.
+ * @param {string} config.serviceName - Nome do serviço (ex: 'cadastro').
+ * @param {string} config.endpointKey - Chave do endpoint (ex: 'grupo', 'classe').
+ * @param {string} config.codeKey - Chave do campo que será o 'value' da option.
+ * @param {string} config.nameKey - Chave do campo que será o 'textContent' da option.
+ * @param {string} config.defaultText - Texto padrão da opção selecionada inicialmente (ex: 'Selecione um...').
+ * @param {string | number | null} [config.filterCode=null] - Código de filtro opcional para o endpoint (ex: código do grupo para buscar classes).
+ */
+export async function populateSelect({
   selectElement,
   serviceName,
   endpointKey,
   codeKey,
   nameKey,
   defaultText,
-  filterCode = null
-) {
+  filterCode = null,
+}) {
+  // 1. Inicialização
   selectElement.innerHTML = `<option value="" selected>${defaultText}</option>`;
   selectElement.disabled = true;
 
+  // 2. Pré-requisito de filtro
   if (endpointKey === "classe" && !filterCode) {
     selectElement.innerHTML =
       '<option value="" selected>Selecione um Grupo primeiro</option>';
@@ -22,20 +34,23 @@ export async function populateSelect(
   try {
     const params = { pagina: 1 };
 
-    // Parâmetros específicos por endpoint
+    // 3. Parâmetros específicos por endpoint (Mantido como estava)
     if (endpointKey === "grupo") {
       params.statusGrupo = "true";
     } else if (endpointKey === "classe") {
       params.codigoGrupo = filterCode;
     }
 
+    // 4. Chamada da API
     const dataSet = await fetchGatewayEndpoint(
-      serviceName,
-      endpointKey,
+      {
+        serviceName: serviceName,
+        endpointKey: endpointKey
+      },
       params
     );
 
-    // O retorno de fetchEndpoint é um objeto { endpointKey: data } ou { endpointKey: { error: ... } }
+    // 5. Tratamento de Erros e Dados
     const data = dataSet[endpointKey];
 
     if (!data) {
@@ -47,12 +62,14 @@ export async function populateSelect(
 
     const list = data.resultado || data.content?.resultado || [];
 
+    // 6. Tratamento de lista vazia
     if (list.length === 0) {
       selectElement.innerHTML = `<option value="">Nenhum item encontrado</option>`;
       selectElement.disabled = true;
       return;
     }
 
+    // 7. Preenchimento do Select
     selectElement.innerHTML = `<option value="" selected>Selecione um...</option>`;
 
     list.forEach((item) => {
@@ -65,6 +82,7 @@ export async function populateSelect(
 
     selectElement.disabled = false;
   } catch (err) {
+    // 8. Tratamento de Exceções
     console.error(`Erro ao carregar ${endpointKey}:`, err);
     selectElement.innerHTML = `<option value="">Falha ao carregar: ${err.message}</option>`;
     selectElement.disabled = true;

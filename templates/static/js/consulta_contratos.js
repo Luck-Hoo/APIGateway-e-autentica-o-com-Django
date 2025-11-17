@@ -1,74 +1,104 @@
 import { fetchGatewayEndpoint } from './api_gateway.js';
 import { currencyFormatter, formatDate } from './utils.js';
 
-// Variáveis DOM
+// --- CONFIGURAÇÕES GLOBAIS ---
+const SERVICE_NAME = 'contratacoes';
+const CONTRATACOES_ENDPOINT_KEY = "consultar_contratacoes";
+
+// --- VARIÁVEIS DOM ---
 const statusMessageDiv = document.getElementById("status-message");
 const tableDiv = document.getElementById("contratacoes-data-table");
 const tableBody = document.getElementById("table-body");
 const searchButton = document.getElementById("search-btn");
 const loadMoreButton = document.getElementById("load-more-btn");
-const codigoOrgao = document.getElementById("unidadeGestora-input");
-const codigoModalidadeInput = document.getElementById("codigoModalidade-input");
-const dataPublicacaoPncpInicial = document.getElementById("dataInicial-input");
-const dataPublicacaoPncpFinal = document.getElementById("dataFinal-input");
-const tamanhoPaginaSelect = document.getElementById("tamanhoPagina-select");
 
-// Estado da Pesquisa
+// Inputs de Filtro (Coletados em um objeto para fácil gerenciamento)
+const filterInputs = {
+    codigoOrgao: document.getElementById("unidadeGestora-input"),
+    codigoModalidade: document.getElementById("codigoModalidade-input"),
+    dataPublicacaoPncpInicial: document.getElementById("dataInicial-input"),
+    dataPublicacaoPncpFinal: document.getElementById("dataFinal-input"),
+    tamanhoPagina: document.getElementById("tamanhoPagina-select"),
+};
+
+// --- ESTADO DA PESQUISA ---
 let currentPage = 1;
 let currentParams = {};
-const SERVICE_NAME = 'contratacoes';
-const CONTRATACOES_ENDPOINT_KEY = "consultar_contratacoes";
 
 // --- FUNÇÕES DE API ---
 
 /**
- * Função específica para chamar o endpoint de Contratações, usando o módulo API.
+ * Função específica para chamar o endpoint de Contratações.
+ * Utiliza o padrão de Objeto de Configuração para os parâmetros.
+ * * @param {object} config - O objeto contendo os parâmetros de filtro.
+ * @param {number} page - O número da página a ser carregada.
+ * @returns {Promise<object>} - O objeto de resposta da API.
  */
-async function fetchContratacoes(params, page = 1) {
-    
-    const data = await fetchGatewayEndpoint(
-        SERVICE_NAME,
-        CONTRATACOES_ENDPOINT_KEY, 
-        { ...params, pagina: page }
+async function fetchContratacoes(config, page) {
+    // Mescla os parâmetros de filtro com o número da página
+    const params = { ...config, pagina: page };
+
+    const response = await fetchGatewayEndpoint(
+        { 
+            serviceName: SERVICE_NAME, 
+            endpointKey: CONTRATACOES_ENDPOINT_KEY 
+        }, 
+        params
     );
     
     // Se a resposta modularizada da API contiver erro, lança exceção
-    if (data.error) {
-        throw new Error(data.error);
+    const apiData = response[CONTRATACOES_ENDPOINT_KEY];
+    if (apiData && apiData.error) {
+        throw new Error(apiData.error);
     }
-    return data;
+    
+    // Retorna a resposta completa (incluindo a chave do endpoint)
+    return response;
 }
 
 // --- FUNÇÃO DE RENDERIZAÇÃO DA TABELA ---
 
 /**
  * Renderiza as linhas de contrato na tabela.
+ * @param {Array<object>} contratos - Lista de objetos de contrato.
  */
 function renderTable(contratos) {
     if (contratos.length === 0) return;
 
+    // Limpa o corpo da tabela antes de adicionar novas linhas
+    tableBody.innerHTML = "";
+
     contratos.forEach((contrato) => {
         const newRow = tableBody.insertRow();
 
-        const numCompra = contrato.numeroCompra ?? "—";
+        // O valor 'numeroContrato' não existe neste JSON de compra, então mapeamos para um campo completo.
+        const numControlePNCP = contrato.numeroControlePNCP ?? "—";
+        
+        // 'numeroCompra' no JSON é o número curto ('5', '13', '87', etc.)
+        const idCompra = contrato.idCompra ?? "—"; 
+        
+        // Outros campos corrigidos para os nomes do JSON:
         const fornecedor = contrato.orgaoEntidadeRazaoSocial ?? "—";
         const modalidade = contrato.modalidadeNome ?? "—";
         const processo = contrato.processo ?? "—";
-        const numParcelas = contrato.numParcelas ?? "—";
-        const valorParcelas = contrato.valorParcelas ?? "—";
+        
+        // Os campos abaixo não existem no seu JSON de *Compra*, por isso retornam "—".
+        // O JSON que você está obtendo é de COMPRA (licitação/credenciamento), e não de CONTRATO.
+        const numParcelas = contrato.numParcelas ?? "—"; // Retorna "—"
+        const valorParcelas = contrato.valorParcelas ?? "—"; // Retorna "—"
 
-        // Usando utilitário de formatação de moeda
+        // Formatação de valores
         const valorGlobal = contrato.valorTotalEstimado
             ? currencyFormatter.format(contrato.valorTotalEstimado) 
             : "—";
 
-        // Usando utilitário de formatação de data
-        const vigenciaInicial = formatDate(contrato.dataPublicacaoPncp);
+        // Datas
+        const vigenciaInicial = formatDate(contrato.dataPublicacaoPncp); 
         const vigenciaFinal = formatDate(contrato.dataEncerramentoPropostaPncp);
 
         newRow.innerHTML = `
-            <td></td>
-            <td>${numCompra}</td>
+            <td>${numControlePNCP}</td>
+            <td>${idCompra}</td>
             <td>${fornecedor}</td>
             <td>${modalidade}</td>
             <td>${processo}</td>
@@ -87,6 +117,7 @@ function renderTable(contratos) {
 
 /**
  * Executa a lógica de pesquisa e paginação.
+ * @param {number} [page=1] - A página a ser carregada.
  */
 async function performSearch(page = 1) {
     searchButton.disabled = true;
@@ -97,27 +128,28 @@ async function performSearch(page = 1) {
         tableBody.innerHTML = "";
         tableDiv.style.display = "none";
         
+        // Coleta de Parâmetros e Criação do Objeto de Configuração
         currentParams = {
-            dataPublicacaoPncpInicial: dataPublicacaoPncpInicial.value,
-            dataPublicacaoPncpFinal: dataPublicacaoPncpFinal.value,
-            codigoOrgao: codigoOrgao.value,
-            codigoModalidade: codigoModalidadeInput.value,
-            tamanhoPagina: tamanhoPaginaSelect.value,
+            dataPublicacaoPncpInicial: filterInputs.dataPublicacaoPncpInicial.value,
+            dataPublicacaoPncpFinal: filterInputs.dataPublicacaoPncpFinal.value,
+            codigoOrgao: filterInputs.codigoOrgao.value,
+            codigoModalidade: filterInputs.codigoModalidade.value,
+            tamanhoPagina: filterInputs.tamanhoPagina.value,
         };
         
-        // Remove parâmetros vazios
+        // Limpeza: Remove parâmetros vazios (cria o Objeto de Configuração Final)
         Object.keys(currentParams).forEach(
             (key) => currentParams[key] === "" && delete currentParams[key]
         );
 
-        // Validação
+        // Validação Mínima
         if (
             !currentParams.dataPublicacaoPncpInicial ||
             !currentParams.dataPublicacaoPncpFinal ||
             !currentParams.codigoModalidade
         ) {
             statusMessageDiv.innerHTML =
-                '<p class="text-danger">As datas Inicial, Final e o Código da Modalidade são obrigatórios.</p>';
+                '<p class="text-danger">As datas Inicial, Final e o **Código da Modalidade** são obrigatórios.</p>';
             searchButton.disabled = false;
             return;
         }
@@ -126,17 +158,15 @@ async function performSearch(page = 1) {
     statusMessageDiv.innerHTML = '<button class="btn btn-primary" type="button" disabled><span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span role="status"> Carregando...</span></button>';
 
     try {
-       // 1. O retorno de fetchContratacoes (que vem de api_gateway) é um objeto:
-        // { "consultar_contratacoes": { resultado: [...], totalPaginas: ... } }
+        // 1. Chamada à API usando o Objeto de Configuração (currentParams)
         const response = await fetchContratacoes(currentParams, page);
 
-        // 2. Acesse o objeto de dados real dentro da chave
+        // 2. Acessa os dados reais (resultado e paginação)
         const apiData = response[CONTRATACOES_ENDPOINT_KEY]; 
 
-        // 3. Use apiData para acessar as chaves do seu JSON:
         const contratos = apiData?.resultado || []; 
-        // 🚨 O seu JSON de retorno tem totalPaginas, não pagination.totalPages
-        const totalPages = apiData?.totalPaginas || page;
+        const totalPages = apiData?.totalPaginas || page; // Usa totalPaginas do JSON
+        
         if (contratos.length === 0 && page === 1) {
             statusMessageDiv.innerHTML =
                 '<p class="text-warning">Nenhum contrato encontrado com os filtros fornecidos.</p>';
@@ -152,17 +182,20 @@ async function performSearch(page = 1) {
             loadMoreButton.style.display = "block";
             loadMoreButton.disabled = false;
             loadMoreButton.textContent = `Carregar Mais (Página ${currentPage + 1} de ${totalPages})`;
+            if (page === 1) {
+                statusMessageDiv.innerHTML = '<p class="text-success">Dados consultados com sucesso!</p>';
+            }
         } else {
             loadMoreButton.style.display = "none";
             statusMessageDiv.innerHTML =
                 '<p class="text-success">Todos os dados foram carregados.</p>';
         }
 
-        if (page === 1) {
-            statusMessageDiv.innerHTML =
+        if (page === 1 && totalPages > 1) {
+             statusMessageDiv.innerHTML =
                 '<p class="text-success">Dados consultados com sucesso!</p>';
-            tableDiv.style.display = "block";
         }
+
     } catch (err) {
         statusMessageDiv.innerHTML = `<p class="text-danger">Falha ao buscar Contratos: ${err.message}</p>`;
         console.error("Erro de consulta:", err);
@@ -177,9 +210,10 @@ async function performSearch(page = 1) {
 
 // --- EVENT LISTENERS E INICIALIZAÇÃO ---
 
-// Define os listeners para pesquisa e carregar mais
+// Define os listeners para pesquisa (sempre página 1)
 searchButton.addEventListener("click", () => performSearch(1));
 
+// Define o listener para carregar mais (próxima página)
 loadMoreButton.addEventListener("click", () =>
     performSearch(currentPage + 1)
 );

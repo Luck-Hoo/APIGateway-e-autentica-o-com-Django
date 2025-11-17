@@ -1,10 +1,25 @@
 import { populateSelect } from './dropdown.js';
 import { fetchGatewayEndpoint } from './api_gateway.js';
 
-// Variáveis DOM
+// --- CONFIGURAÇÕES GLOBAIS ---
+
+const SERVICE_NAME = 'material';
+const ENDPOINT_KEYS_FOR_SEARCH = [
+    'grupo', // Usado para obter o nome do grupo selecionado no filtro
+    'classe',
+    'pdm',
+    'item',
+    'natureza_despesa',
+    'unidade_fornecimento',
+    'caracteristicas'
+];
+
+// --- VARIÁVEIS DOM ---
+
 const statusMessageDiv = document.getElementById('status-message');
 const tableDiv = document.getElementById('material-data-table');
 const tableBody = document.getElementById('table-body');
+const searchButton = document.getElementById('search-btn');
 
 // Selects para filtros
 const nomeGrupoSelect = document.getElementById('nomeGrupo-select');
@@ -15,81 +30,94 @@ const naturezaDespesaSelect = document.getElementById('naturezaDespesa-select');
 const unidadeFornecimentoSelect = document.getElementById('unidadeFornecimento-select');
 const caracteristicasSelect = document.getElementById('caracteristicas-select');
 
-const searchButton = document.getElementById('search-btn');
-
-// Configurações dos Endpoints a serem consultados no click
-// Incluímos todos os endpoints documentados para retornar dados em conjunto, se necessário.
-const ENDPOINT_KEYS_FOR_SEARCH = [
-    'grupo', // Apenas para garantia, se precisar de dados adicionais do grupo
-    'classe',
-    'pdm',
-    'item',
-    'natureza_despesa',
-    'unidade_fornecimento',
-    'caracteristicas'
+// Lista de selects dependentes para reset
+const DEPENDENT_SELECTS = [
+    classeSelect,
+    pdmSelect,
+    itemSelect,
+    naturezaDespesaSelect,
+    unidadeFornecimentoSelect,
+    caracteristicasSelect
 ];
 
-// Serviço utilizado (Dicionário mestre Gateway)
-const SERVICE_NAME = 'material';
 
-// Função auxiliar para resetar selects dependentes
+// --- FUNÇÕES AUXILIARES ---
+
+/**
+ * Reseta o estado dos selects dependentes.
+ * @param {HTMLSelectElement[]} selects - Array de elementos select a serem resetados.
+ */
 function resetSelects(selects) {
     selects.forEach(select => {
-        select.innerHTML = `<option value="" selected>${select.getAttribute('data-default-message')}</option>`;
+        // Usa o atributo data-default-message para manter o texto padrão
+        const defaultMessage = select.getAttribute('data-default-message') || 'Selecione um...';
+        select.innerHTML = `<option value="" selected>${defaultMessage}</option>`;
         select.disabled = true;
     });
     tableDiv.style.display = 'none';
     statusMessageDiv.innerHTML = '';
 }
 
-// Carregamento inicial de Dropdowns (Apenas Grupo)
-async function loadDropdowns() {
-    await populateSelect(
-        nomeGrupoSelect,
-        SERVICE_NAME,
-        'grupo',
-        'codigoGrupo',
-        'nomeGrupo',
-        'Carregando Grupos...'
-    );
+// --- CARREGAMENTO INICIAL ---
 
-    // Adiciona as mensagens default e reseta os dependentes
+/**
+ * Carrega o primeiro dropdown (Grupo) e configura mensagens padrão para os dependentes.
+ */
+async function loadDropdowns() {
+    // 1. Configura as mensagens padrão (para quando o select for resetado)
     classeSelect.setAttribute('data-default-message', 'Selecione um Grupo primeiro');
     pdmSelect.setAttribute('data-default-message', 'Selecione uma Classe primeiro');
     itemSelect.setAttribute('data-default-message', 'Selecione um PDM primeiro');
     naturezaDespesaSelect.setAttribute('data-default-message', 'Selecione um PDM primeiro');
     unidadeFornecimentoSelect.setAttribute('data-default-message', 'Selecione um PDM primeiro');
     caracteristicasSelect.setAttribute('data-default-message', 'Selecione um Item primeiro');
-    
-    resetSelects([classeSelect, pdmSelect, itemSelect, naturezaDespesaSelect, unidadeFornecimentoSelect, caracteristicasSelect]);
+
+    // 2. Carrega o dropdown inicial (GRUPO) usando o Padrão de Objeto de Configuração
+    await populateSelect({
+        selectElement: nomeGrupoSelect,
+        serviceName: SERVICE_NAME,
+        endpointKey: 'grupo',
+        codeKey: 'codigoGrupo',
+        nameKey: 'nomeGrupo',
+        defaultText: 'Carregando Grupos...'
+    });
+
+    // 3. Reseta os selects dependentes
+    resetSelects(DEPENDENT_SELECTS);
 }
 
 // --- LÓGICA DE RENDERIZAÇÃO E BUSCA ---
 
+/**
+ * Renderiza os dados consolidados na tabela.
+ * @param {object} data - Objeto contendo os dados retornados de múltiplos endpoints.
+ */
 function renderTable(data) {
     const errors = Object.entries(data).filter(([, value]) => value && value.error);
     const classesList = data.classe?.resultado || [];
 
     if (errors.length > 0) {
+        // Lógica de Erros
         const errorMessage = errors
             .map(([key, value]) => `**[${key.toUpperCase()}]:** ${value.error}`)
             .join('<br>');
-
         statusMessageDiv.innerHTML = `<p class="text-danger">Erros encontrados:<br>${errorMessage}</p>`;
         tableDiv.style.display = 'none';
         return;
     }
 
     if (classesList.length === 0) {
+        // Lógica de Lista Vazia
         statusMessageDiv.innerHTML = '<p class="text-warning">Nenhum material encontrado para os filtros selecionados.</p>';
         tableBody.innerHTML = '';
         tableDiv.style.display = 'none';
         return;
     }
 
+    // Lógica de Sucesso
     statusMessageDiv.innerHTML = `<p class="text-success">Dados consultados com sucesso! ${classesList.length} classes encontradas.</p>`;
 
-    // Mapeamento de dados de outros endpoints para fácil acesso
+    // Mapeamento de dados auxiliares para fácil acesso (Otimização da busca)
     const pdmMap = (data.pdm?.resultado || []).reduce((acc, item) => { acc[item.codigoPdm] = item; return acc; }, {});
     const itemMap = (data.item?.resultado || []).reduce((acc, item) => { acc[item.codigoItem] = item; return acc; }, {});
     const naturezaMap = (data.natureza_despesa?.resultado || []).reduce((acc, item) => { acc[item.codigoPdm] = item; return acc; }, {});
@@ -99,36 +127,30 @@ function renderTable(data) {
 
     tableBody.innerHTML = ''; // Limpa a tabela
 
-    // Itera sobre as classes, que é o resultado principal
+    // Itera sobre o resultado principal (CLASSES)
     classesList.forEach(classeItem => {
         const codigoGrupo = classeItem.codigoGrupo || '';
         const nomeGrupo = nomeGrupoSelect.options[nomeGrupoSelect.selectedIndex]?.textContent.split(' - ')[1] || 'Grupo Selecionado';
         const codigoClasse = classeItem.codigoClasse || '';
         const nomeClasse = classeItem.nomeClasse || 'Não informado';
 
-        // Aqui assumimos que, se houver classe, haverá pelo menos um PDM/Item relacionado nos outros resultados
-        // Como não sabemos a ligação 1:1, vamos tentar buscar o primeiro item relacionado ao PDM e Item filtrados
-        
-        // PDM: Busca um PDM relacionado ao grupo e classe
+        // Determinação dos dados relacionados (baseado na lógica original)
         const pdmEncontrado = Object.values(pdmMap).find(pdm => pdm.codigoGrupo == codigoGrupo && pdm.codigoClasse == codigoClasse);
         const pdmInfo = pdmEncontrado ? `${pdmEncontrado.codigoPdm} - ${pdmEncontrado.nomePdm}` : 'N/A';
 
-        // Item: Busca um Item relacionado ao PDM encontrado
         const itemEncontrado = Object.values(itemMap).find(item => item.codigoPdm == pdmEncontrado?.codigoPdm);
         const itemInfo = itemEncontrado ? `${itemEncontrado.codigoItem} - ${itemEncontrado.descricaoItem}` : 'N/A';
 
-        // Natureza Despesa: Busca Natureza relacionada ao PDM encontrado
         const naturezaEncontrada = Object.values(naturezaMap).find(nd => nd.codigoPdm == pdmEncontrado?.codigoPdm);
         const naturezaInfo = naturezaEncontrada ? `${naturezaEncontrada.codigoNaturezaDespesa} - ${naturezaEncontrada.nomeNaturezaDespesa}` : 'N/A';
         
-        // Unidade Fornecimento: Busca Unidade relacionada ao PDM encontrado
         const unidadeEncontrada = Object.values(unidadeMap).find(uf => uf.codigoPdm == pdmEncontrado?.codigoPdm);
         const unidadeInfo = unidadeEncontrada ? `${unidadeEncontrada.siglaUnidadeFornecimento} - ${unidadeEncontrada.nomeUnidadeFornecimento}` : 'N/A';
 
-        // Características: Busca Características relacionadas ao Item encontrado
         const caracteristicaEncontrada = Object.values(caracteristicasMap).find(carac => carac.codigoItem == itemEncontrado?.codigoItem);
         const caracteristicaInfo = caracteristicaEncontrada ? `${caracteristicaEncontrada.nomeCaracteristica}: ${caracteristicaEncontrada.nomeValorCaracteristica}` : 'N/A';
         
+        // Renderização da linha
         const newRow = tableBody.insertRow();
         newRow.innerHTML = `
             <td>${codigoGrupo} - ${nomeGrupo}</td>
@@ -144,24 +166,24 @@ function renderTable(data) {
     tableDiv.style.display = 'block';
 }
 
-// --- EVENT LISTENERS GERAIS (Lógica de Cascata) ---
+// --- EVENT LISTENERS (Lógica de Cascata) ---
 
 // 1. Listener para carregar a Classe após selecionar o Grupo
 nomeGrupoSelect.addEventListener('change', () => {
     const selectedGroupId = nomeGrupoSelect.value;
-    resetSelects([classeSelect, pdmSelect, itemSelect, naturezaDespesaSelect, unidadeFornecimentoSelect, caracteristicasSelect]);
+    resetSelects(DEPENDENT_SELECTS);
 
     if (selectedGroupId) {
-        populateSelect(
-            classeSelect,
-            SERVICE_NAME,
-            'classe',
-            'codigoClasse',
-            'nomeClasse',
-            'Carregando Classes...',
-            selectedGroupId, // Param: codigoGrupo
-            { statusClasse: 1 }
-        );
+        populateSelect({
+            selectElement: classeSelect,
+            serviceName: SERVICE_NAME,
+            endpointKey: 'classe',
+            codeKey: 'codigoClasse',
+            nameKey: 'nomeClasse',
+            defaultText: 'Carregando Classes...',
+            filterCode: selectedGroupId, // Código do Grupo
+            extraParams: { statusClasse: 1 } // Outros parâmetros específicos
+        });
     }
 });
 
@@ -172,16 +194,16 @@ classeSelect.addEventListener('change', () => {
     resetSelects([pdmSelect, itemSelect, naturezaDespesaSelect, unidadeFornecimentoSelect, caracteristicasSelect]);
 
     if (selectedClassId && selectedGroupId) {
-        populateSelect(
-            pdmSelect,
-            SERVICE_NAME,
-            'pdm',
-            'codigoPdm',
-            'nomePdm',
-            'Carregando PDMs...',
-            selectedGroupId, // Param: codigoGrupo
-            { codigoClasse: selectedClassId, statusPdm: 1 }
-        );
+        populateSelect({
+            selectElement: pdmSelect,
+            serviceName: SERVICE_NAME,
+            endpointKey: 'pdm',
+            codeKey: 'codigoPdm',
+            nameKey: 'nomePdm',
+            defaultText: 'Carregando PDMs...',
+            filterCode: selectedGroupId, // Código do Grupo
+            extraParams: { codigoClasse: selectedClassId, statusPdm: 1 }
+        });
     }
 });
 
@@ -194,40 +216,38 @@ pdmSelect.addEventListener('change', () => {
 
     if (selectedPdmId) {
         // Carrega ITEM
-        populateSelect(
-            itemSelect,
-            SERVICE_NAME,
-            'item',
-            'codigoItem',
-            'descricaoItem',
-            'Carregando Itens...',
-            selectedGroupId, // Param: codigoGrupo
-            { codigoClasse: selectedClassId, codigoPdm: selectedPdmId, statusItem: 1 }
-        );
+        populateSelect({
+            selectElement: itemSelect,
+            serviceName: SERVICE_NAME,
+            endpointKey: 'item',
+            codeKey: 'codigoItem',
+            nameKey: 'descricaoItem',
+            defaultText: 'Carregando Itens...',
+            filterCode: selectedGroupId, // Código do Grupo (se o endpoint exigir)
+            extraParams: { codigoClasse: selectedClassId, codigoPdm: selectedPdmId, statusItem: 1 }
+        });
         
-        // Carrega NATUREZA DESPESA (depende apenas do PDM)
-        populateSelect(
-            naturezaDespesaSelect,
-            SERVICE_NAME,
-            'natureza_despesa',
-            'codigoNaturezaDespesa',
-            'nomeNaturezaDespesa',
-            'Carregando Naturezas...',
-            null,
-            { codigoPdm: selectedPdmId, statusNaturezaDespesa: 1 }
-        );
+        // Carrega NATUREZA DESPESA
+        populateSelect({
+            selectElement: naturezaDespesaSelect,
+            serviceName: SERVICE_NAME,
+            endpointKey: 'natureza_despesa',
+            codeKey: 'codigoNaturezaDespesa',
+            nameKey: 'nomeNaturezaDespesa',
+            defaultText: 'Carregando Naturezas...',
+            extraParams: { codigoPdm: selectedPdmId, statusNaturezaDespesa: 1 } // Sem filterCode específico
+        });
 
-        // Carrega UNIDADE FORNECIMENTO (depende apenas do PDM)
-        populateSelect(
-            unidadeFornecimentoSelect,
-            SERVICE_NAME,
-            'unidade_fornecimento',
-            'siglaUnidadeFornecimento',
-            'nomeUnidadeFornecimento',
-            'Carregando Unidades...',
-            null,
-            { codigoPdm: selectedPdmId, statusUnidadeFornecimentoPdm: 1 }
-        );
+        // Carrega UNIDADE FORNECIMENTO
+        populateSelect({
+            selectElement: unidadeFornecimentoSelect,
+            serviceName: SERVICE_NAME,
+            endpointKey: 'unidade_fornecimento',
+            codeKey: 'siglaUnidadeFornecimento',
+            nameKey: 'nomeUnidadeFornecimento',
+            defaultText: 'Carregando Unidades...',
+            extraParams: { codigoPdm: selectedPdmId, statusUnidadeFornecimentoPdm: 1 } // Sem filterCode específico
+        });
     }
 });
 
@@ -237,21 +257,21 @@ itemSelect.addEventListener('change', () => {
     resetSelects([caracteristicasSelect]);
 
     if (selectedItemId) {
-        populateSelect(
-            caracteristicasSelect,
-            SERVICE_NAME,
-            'caracteristicas',
-            'codigoCaracteristica', // Usaremos o código da característica como valor
-            'nomeCaracteristica',
-            'Carregando Características...',
-            null,
-            { codigoItem: selectedItemId }
-        );
+        populateSelect({
+            selectElement: caracteristicasSelect,
+            serviceName: SERVICE_NAME,
+            endpointKey: 'caracteristicas',
+            codeKey: 'codigoCaracteristica',
+            nameKey: 'nomeCaracteristica',
+            defaultText: 'Carregando Características...',
+            extraParams: { codigoItem: selectedItemId } // Sem filterCode específico
+        });
     }
 });
 
 
-// LÓGICA DE PESQUISA
+// --- LÓGICA DE PESQUISA PRINCIPAL ---
+
 searchButton.addEventListener('click', async function () {
     const codigoGrupo = nomeGrupoSelect.value;
     
@@ -260,11 +280,12 @@ searchButton.addEventListener('click', async function () {
     const codigoPdm = pdmSelect.value;
     const codigoItem = itemSelect.value;
     const codigoNaturezaDespesa = naturezaDespesaSelect.value;
-    const siglaUnidadeFornecimento = unidadeFornecimentoSelect.value;
-    const codigoCaracteristica = caracteristicasSelect.value; // Usado apenas como filtro, se necessário
+    // siglaUnidadeFornecimento é o valor (value) de Unidade Fornecimento
+    const siglaUnidadeFornecimento = unidadeFornecimentoSelect.value; 
+    const codigoCaracteristica = caracteristicasSelect.value; 
 
     if (!codigoGrupo) {
-        statusMessageDiv.innerHTML = '<p class="text-danger">O Grupo é obrigatório para a consulta.</p>';
+        statusMessageDiv.innerHTML = '<p class="text-danger">O **Grupo** é obrigatório para a consulta.</p>';
         tableDiv.style.display = 'none';
         return;
     }
@@ -277,59 +298,55 @@ searchButton.addEventListener('click', async function () {
         const baseParams = {
             pagina: 1,
             codigoGrupo: codigoGrupo,
-            // Adicionar filtros, se selecionados
+            // Adiciona filtros se existirem (Padrão de Propriedades Opcionais)
             ...(codigoClasse && { codigoClasse: codigoClasse, statusClasse: 1 }),
             ...(codigoPdm && { codigoPdm: codigoPdm, statusPdm: 1 }),
             ...(codigoItem && { codigoItem: codigoItem, statusItem: 1 }),
-            // Natureza e Unidade dependem do PDM (já incluído) e têm seus próprios códigos para filtro
-            // Não há filtro direto por siglaUnidadeFornecimento na documentação fornecida, 
-            // mas podemos passar os outros filtros relacionados ao PDM.
             ...(codigoNaturezaDespesa && { codigoNaturezaDespesa: codigoNaturezaDespesa, statusNaturezaDespesa: 1 }),
-            // Características depende do Item
-            // A consulta de caracteristicas só usa codigoItem, que é o que já está filtrado acima.
-            
-            // Adicionando um status padrão onde aplicável
+            // status é adicionado preventivamente
             statusClasse: 1,
             statusPdm: 1,
             statusItem: 1
         };
 
-        // Dispara as chamadas para obter dados, utilizando os filtros.
-        // O `fetchGatewayEndpoint` deve saber como mapear o `key` para os parâmetros corretos.
-        // Para simplificar a exibição dos dados na tabela, vamos garantir que a classe sempre seja buscada
-        // e os demais endpoints filtrem a partir dela.
-
+        // Dispara as chamadas para obter dados em paralelo para todos os endpoints
         const fetchPromises = ENDPOINT_KEYS_FOR_SEARCH.map(key => {
-            // A consulta principal é por classe, as demais usam a hierarquia.
             const params = { ...baseParams };
 
-            // Ajustes de parâmetros por endpoint
+            // Ajustes de parâmetros específicos por endpoint (evitando filtros desnecessários)
             if (key === 'caracteristicas') {
-                if (!codigoItem) return Promise.resolve({}); // Só busca se tiver Item
+                if (!codigoItem) return Promise.resolve({}); // Só busca se houver Item
                 params.codigoItem = codigoItem;
-                delete params.codigoGrupo;
+                // Deleta parâmetros de hierarquia superior que não são usados por este endpoint
+                delete params.codigoGrupo; 
                 delete params.codigoClasse;
                 delete params.codigoPdm;
             } else if (key === 'natureza_despesa' || key === 'unidade_fornecimento') {
-                if (!codigoPdm) return Promise.resolve({}); // Só busca se tiver PDM
+                if (!codigoPdm) return Promise.resolve({}); // Só busca se houver PDM
                 params.codigoPdm = codigoPdm;
+                // Deleta parâmetros de hierarquia superior que não são usados por este endpoint
                 delete params.codigoGrupo;
                 delete params.codigoClasse;
                 delete params.codigoItem;
             }
+            // Outros endpoints (classe, pdm, item) usam o baseParams que já contém a hierarquia.
             
-            return fetchGatewayEndpoint(SERVICE_NAME, key, params);
+            return fetchGatewayEndpoint({serviceName: SERVICE_NAME, endpointKey: key}, params);
         });
         
         const resultsArray = await Promise.all(fetchPromises);
+        
+        // Consolida todos os resultados em um único objeto
         const consolidatedData = resultsArray.reduce((acc, current) => ({ ...acc, ...current }), {});
 
         renderTable(consolidatedData);
 
     } catch (err) {
         statusMessageDiv.innerHTML = `<p class="text-danger">Falha crítica ao buscar dados: ${err.message}</p>`;
-        console.error(err);
+        console.error('Erro na requisição principal:', err);
     }
 });
+
+// --- INICIALIZAÇÃO ---
 
 window.addEventListener('load', loadDropdowns);

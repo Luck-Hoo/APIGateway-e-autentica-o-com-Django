@@ -158,20 +158,29 @@ def gateway_router(request, service_name, endpoint_key):
     # 1. Encontrar o dicionário de endpoints do serviço
     endpoint_group = ALL_SERVICES.get(service_name)
     
+    # Verificação para endpoint_group
     if not endpoint_group:
-        return JsonResponse({'error': f'Serviço "{service_name}" não reconhecido.'}, status=404)
+        return JsonResponse({
+            'error': f'Serviço "{service_name}" não reconhecido.'}, status=404
+            )
 
     # 2. Encontrar o endpoint_path específico
     endpoint_path = endpoint_group.get(endpoint_key)
     
-    # Esta verificação substitui o problema anterior (endpoint não encontrado no grupo)
+    # Verificação para endpoint_path
     if not endpoint_path:
         return JsonResponse({
             'error': f'Endpoint "{endpoint_key}" não encontrado para o serviço "{service_name}".'
         }, status=404)
 
-    # 3. Chamar o serviço
-    resp = chamar_endpoint.chamar_enpoint_dados_abertos_gov(endpoint_path, params=request.GET)
+    # Construir objeto
+    config_api = {
+        'endpoint_path': endpoint_path,
+        'params' : request.GET,
+    }
+
+    # 3. Chamar o serviço e passar objeto
+    resp = chamar_endpoint.chamar_enpoint_dados_abertos_gov(config_api)
     
     # 4. Tratar Resposta (incluindo a verificação de None)
     if resp is None:

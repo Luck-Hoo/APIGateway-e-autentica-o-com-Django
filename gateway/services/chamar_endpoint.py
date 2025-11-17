@@ -9,7 +9,12 @@ API_BASE_URL = os.environ.get('COMPRAS_BASE_URL')
 MAX_RETRIES = 3 
 RETRY_STATUSES = [500, 503, 504] 
 
-def chamar_enpoint_dados_abertos_gov(endpoint_path, params=None):
+# Usa o padrão objeto de configuração (Dicionário) com config
+def chamar_enpoint_dados_abertos_gov(config):
+    # 1. Extrair configuração usando chaves padrão
+    endpoint_path = config.get('endpoint_path')
+    params = config.get('params', None)
+    
     url = urljoin(API_BASE_URL, endpoint_path)
     
     # Este laço agora garante que apenas erros de rede ou status de retry causam repetição
