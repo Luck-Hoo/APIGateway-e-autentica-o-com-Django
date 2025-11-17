@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'graphql',
     'login',
     'compras_api',
     'gateway',
@@ -142,6 +143,10 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'templates/static')]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Configuração do GraphQL (aponta para o arquivo de schema raiz)
+GRAPHENE = {
+    'SCHEMA': 'aprendendo07011.schema.schema'
+}
 
 # ---------------------------------------------------------------------
 # CONFIGURAÇÕES DE AUTENTICAÇÃO LDAP
