@@ -10,14 +10,15 @@
 {% block content %}
 <div class="container py-5" style="margin-top: 90px">
   <div class="hero-section shadow-sm">
-    <h1 class="display-5 fw-bold">Consulta de Material (Grupo e Classe)</h1>
+    <h1 class="display-5 fw-bold">Consulta de Material (Catálogo Completo)</h1>
     <p class="lead mt-3">
-      Pesquise por Grupo de Material e filtre por Classe.
+      Pesquise por Grupo e refine a busca pelos demais tipos de material.
     </p>
   </div>
 
   <div class="row justify-content-center mb-4 g-3">
     <h3 class="mb-3 text-primary">Parâmetros de Pesquisa</h3>
+    
     <div class="col-md-5">
       <label for="nomeGrupo-select" class="form-label text-muted">Nome do Grupo</label>
       <select id="nomeGrupo-select" class="form-select">
@@ -30,6 +31,40 @@
         <option value="" selected>Selecione um Grupo primeiro</option>
       </select>
     </div>
+
+    <div class="col-md-5">
+      <label for="pdm-select" class="form-label text-muted">PDM (Opcional)</label>
+      <select id="pdm-select" class="form-select" disabled>
+        <option value="" selected>Selecione uma Classe primeiro</option>
+      </select>
+    </div>
+    <div class="col-md-5">
+      <label for="item-select" class="form-label text-muted">Item (Opcional)</label>
+      <select id="item-select" class="form-select" disabled>
+        <option value="" selected>Selecione um PDM primeiro</option>
+      </select>
+    </div>
+
+    <div class="col-md-5">
+      <label for="naturezaDespesa-select" class="form-label text-muted">Natureza da Despesa (Opcional)</label>
+      <select id="naturezaDespesa-select" class="form-select" disabled>
+        <option value="" selected>Selecione um PDM primeiro</option>
+      </select>
+    </div>
+    <div class="col-md-5">
+      <label for="unidadeFornecimento-select" class="form-label text-muted">Unidade Fornecimento (Opcional)</label>
+      <select id="unidadeFornecimento-select" class="form-select" disabled>
+        <option value="" selected>Selecione um PDM primeiro</option>
+      </select>
+    </div>
+
+    <div class="col-md-5">
+      <label for="caracteristicas-select" class="form-label text-muted">Características (Opcional)</label>
+      <select id="caracteristicas-select" class="form-select" disabled>
+        <option value="" selected>Selecione um Item primeiro</option>
+      </select>
+    </div>
+
     <div class="col-md-2 d-flex align-items-end">
       <button id="search-btn" class="btn btn-primary w-100">
         Consultar
@@ -46,6 +81,11 @@
           <tr>
             <th>Grupo (Código e Nome)</th>
             <th>Classe (Código e Nome)</th>
+            <th>PDM</th>
+            <th>Item</th>
+            <th>Natureza da Despesa</th>
+            <th>Unidade Fornecimento</th>
+            <th>Características</th>
           </tr>
         </thead>
         <tbody id="table-body"></tbody>
@@ -56,7 +96,4 @@
 {% endblock %}
 
 {% block extra_js %}
-<script type="module" src="{% static 'js/material_consulta.js' %}"></script>{% endblock %}
-</body>
-
-</html>
+<script type="module" src="{% static 'js/catalogo_materiais.js' %}"></script>{% endblock %}
