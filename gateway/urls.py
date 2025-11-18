@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import gateway_router
+from .views import GatewayRouterAPIView
 
 urlpatterns = [
-    path('<str:service_name>/<str:endpoint_key>/', gateway_router, name='gateway_router'),
+    path('<str:service_name>/<str:endpoint_key>/', GatewayRouterAPIView.as_view()),
 ]

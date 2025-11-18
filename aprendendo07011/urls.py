@@ -16,6 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -23,4 +28,26 @@ urlpatterns = [
     path('login/', include('login.urls'), name='login'),
     path('gateway/', include('gateway.urls'), name='gateway'),
     path('compras_api/', include('compras_api.urls', namespace='compras_api'), name='compras_api'),
+
+    # --- ROTAS SWAGGER/OPENAPI ---
+    
+    # 1. Endpoint para o arquivo SCHEMA (JSON/YAML)
+    # URL: /api/schema/
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    
+    # 2. Rota para o SWAGGER UI (Interface Interativa)
+    # URL: /api/schema/swagger-ui/
+    path(
+        'api/schema/swagger-ui/', 
+        SpectacularSwaggerView.as_view(url_name='schema'), 
+        name='swagger-ui'
+    ),
+    
+    # 3. Rota para o REDOC (Documentação de Estilo de Livro)
+    # URL: /api/schema/redoc/
+    path(
+        'api/schema/redoc/', 
+        SpectacularRedocView.as_view(url_name='schema'), 
+        name='redoc'
+    ),
 ]

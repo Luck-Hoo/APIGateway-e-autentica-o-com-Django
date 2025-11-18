@@ -39,25 +39,31 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
-# Application definition
-
 INSTALLED_APPS = [
+    # Django Core Apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'graphql',
+
+    # --- Terceiros (Frameworks API) ---
+    'rest_framework',                  
+    'rest_framework_simplejwt',        
+    'drf_spectacular',                 
+    'graphene_django',                
+
+    # --- Seus Apps ---
     'login',
-    'compras_api',
+    'home',
     'gateway',
-    'home'
+    'compras_api',
 ]
 
 MIDDLEWARE = [
-    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -154,7 +160,6 @@ GRAPHENE = {
 
 # 1. Backends de Autenticação
 AUTHENTICATION_BACKENDS = [
-    'rest_framework_simplejwt.authentication.JWTAuthentication',
     'django_auth_ldap.backend.LDAPBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
@@ -186,9 +191,12 @@ LOGOUT_REDIRECT_URL = '/login/'
 SESSION_SECURITY_TIMEOUT = 60 # 60 segundos
 
 REST_FRAMEWORK = {
+    # Define o JWT como o principal método de autenticação para APIs REST
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    # Configuração do Swagger/OpenAPI
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema', 
 }
 
 SIMPLE_JWT = {
